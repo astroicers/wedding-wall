@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  minio:
+    image: quay.io/minio/minio
+    container_name: wedding-wall-minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: admin
+      MINIO_ROOT_PASSWORD: admin123
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ":9001"
+    networks:
+      - wedding-wall-network
+
+  wedding-wall:
+    build: .
+    container_name: wedding-wall-app
+    ports:
+      - "3000:3000"
+    environment:
+      MINIO_ENDPOINT: minio
+      MINIO_PORT: 9000
+      MINIO_USE_SSL: false
+      MINIO_ACCESS_KEY: admin
+      MINIO_SECRET_KEY: admin123
+      MINIO_BUCKET_NAME: wedding-wall
+    depends_on:
+      - minio
+    networks:
+      - wedding-wall-network
+    restart: unless-stopped
+
+volumes:
+  minio_data:
+    driver: local
+
+networks:
+  wedding-wall-network:
+    driver: bridge

@@ -1,37 +1,73 @@
 import formidable from 'formidable'
-import { MinioClient } from '~/server/utils/minio'
+import { MinioService } from '~/server/utils/minio'
 import { readFile } from 'fs/promises'
 import { randomUUID } from 'crypto'
 
 export default defineEventHandler(async (event) => {
-  const form = formidable({ keepExtensions: true, multiples: false })
+  try {
+    const form = formidable({ keepExtensions: true, multiples: false })
 
-  const { fields, files } = await new Promise<any>((resolve, reject) => {
-    form.parse(event.req, (err, fields, files) => {
-      if (err || !files.file) return reject(err || new Error('No file'))
-      resolve({ fields, files })
+    const { fields, files } = await new Promise<any>((resolve, reject) => {
+      form.parse(event.node.req, (err, fields, files) => {
+        if (err) return reject(err)
+        if (!files.file) return reject(new Error('沒有檔案被上傳'))
+        resolve({ fields, files })
+      })
     })
-  })
 
-  const file = files.file[0]
-  const fileBuffer = await readFile(file.filepath)
-  const filename = `${Date.now()}-${file.originalFilename}`
-  const bucket = 'wedding-wall'
+    const file = files.file[0]
+    const name = fields.name?.[0] || '匿名'
+    const text = fields.text?.[0] || ''
 
-  await MinioClient.putObject(bucket, filename, fileBuffer)
+    if (!file.originalFilename) {
+      throw createError({
+        statusCode: 400,
+        statusMessage: '檔案名稱無效'
+      })
+    }
 
-  const metadata = {
-    name: fields.name?.[0] || '匿名',
-    text: fields.text?.[0] || '',
-    photo: `/api/image/${encodeURIComponent(filename)}`
-  }
+    // 檢查檔案類型
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif']
+    if (!allowedTypes.includes(file.mimetype)) {
+      throw createError({
+        statusCode: 400,
+        statusMessage: '只允許上傳圖片檔案'
+      })
+    }
 
-  const metadataJson = Buffer.from(JSON.stringify(metadata, null, 2))
-  const metadataFilename = `metadata/${Date.now()}-${randomUUID()}.json`
+    const fileBuffer = await readFile(file.filepath)
+    const filename = `${Date.now()}-${file.originalFilename}`
 
-  await MinioClient.putObject(bucket, metadataFilename, metadataJson)
+    // 上傳圖片
+    await MinioService.uploadFile(filename, fileBuffer, file.mimetype)
 
-  return {
-    url: metadata.photo
+    // 準備 metadata
+    const metadata = {
+      name,
+      text,
+      photo: `/api/image/${encodeURIComponent(filename)}`,
+      timestamp: new Date().toISOString()
+    }
+
+    // 上傳 metadata
+    const metadataFilename = `metadata/${Date.now()}-${randomUUID()}.json`
+    await MinioService.uploadJson(metadataFilename, metadata)
+
+    return {
+      success: true,
+      url: metadata.photo,
+      message: '上傳成功'
+    }
+  } catch (error: any) {
+    console.error('上傳錯誤:', error)
+    
+    if (error.statusCode) {
+      throw error
+    }
+    
+    throw createError({
+      statusCode: 500,
+      statusMessage: '上傳失敗，請重試'
+    })
   }
 })
