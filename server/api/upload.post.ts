@@ -99,11 +99,11 @@ export default defineEventHandler(async (event) => {
 async function determineApprovalStatus(text: string): Promise<'approved' | 'pending' | 'rejected'> {
   try {
     // 獲取管理員設定
-    const settings = await getAdminSettings()
+    const settings = await getAdminSettings() as any
     
     // 檢查自動拒絕關鍵字
     if (settings.autoRejectKeywords) {
-      const rejectKeywords = settings.autoRejectKeywords.split(',').map(k => k.trim()).filter(k => k)
+      const rejectKeywords = settings.autoRejectKeywords.split(',').map((k: string) => k.trim()).filter((k: string) => k)
       for (const keyword of rejectKeywords) {
         if (text.toLowerCase().includes(keyword.toLowerCase())) {
           console.log(`留言因包含拒絕關鍵字 "${keyword}" 被自動拒絕:`, text)
@@ -114,7 +114,7 @@ async function determineApprovalStatus(text: string): Promise<'approved' | 'pend
     
     // 檢查自動通過關鍵字
     if (settings.autoApproveKeywords) {
-      const approveKeywords = settings.autoApproveKeywords.split(',').map(k => k.trim()).filter(k => k)
+      const approveKeywords = settings.autoApproveKeywords.split(',').map((k: string) => k.trim()).filter((k: string) => k)
       for (const keyword of approveKeywords) {
         if (text.toLowerCase().includes(keyword.toLowerCase())) {
           console.log(`留言因包含通過關鍵字 "${keyword}" 被自動通過:`, text)
@@ -155,7 +155,7 @@ async function getAdminSettings() {
 
     const stream = await minioClient.getObject(bucketName, settingsKey)
     
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       let settingsData = ''
       
       stream.on('data', (chunk) => {
