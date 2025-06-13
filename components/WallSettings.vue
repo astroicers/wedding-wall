@@ -11,8 +11,13 @@
       </div>
       <div class="el-card__body">
         <div class="settings-content">
+          <div class="settings-description">
+            <p>調整祝福訊息在牆上的顯示時間，確保每則訊息都能被充分欣賞</p>
+          </div>
+          
           <div class="setting-group">
             <label class="setting-label">自動播放間隔時間</label>
+            <p class="setting-description">每則訊息的基本顯示時間</p>
             <div class="setting-control">
               <el-slider 
                 v-model="autoplayDelay" 
@@ -27,22 +32,8 @@
           </div>
 
           <div class="setting-group">
-            <label class="setting-label">長文字額外時間</label>
-            <div class="setting-control">
-              <el-slider 
-                v-model="longTextDelay" 
-                :min="1" 
-                :max="5" 
-                :step="0.5"
-                show-stops
-                @change="updateSettings"
-              />
-              <span class="setting-value">+{{ longTextDelay }} 秒</span>
-            </div>
-          </div>
-
-          <div class="setting-group">
             <label class="setting-label">圖片額外時間</label>
+            <p class="setting-description">含有照片的訊息會自動增加顯示時間</p>
             <div class="setting-control">
               <el-slider 
                 v-model="imageDelay" 
@@ -53,21 +44,6 @@
                 @change="updateSettings"
               />
               <span class="setting-value">+{{ imageDelay }} 秒</span>
-            </div>
-          </div>
-
-          <div class="setting-group">
-            <label class="setting-label">最大顯示時間</label>
-            <div class="setting-control">
-              <el-slider 
-                v-model="maxDelay" 
-                :min="5" 
-                :max="15" 
-                :step="1"
-                show-stops
-                @change="updateSettings"
-              />
-              <span class="setting-value">{{ maxDelay }} 秒</span>
             </div>
           </div>
 
@@ -88,9 +64,7 @@ import { Setting, RefreshRight } from '@element-plus/icons-vue'
 
 // 設定項目
 const autoplayDelay = ref(3)      // 基礎間隔時間（秒）
-const longTextDelay = ref(2)      // 長文字額外時間（秒）
 const imageDelay = ref(1)         // 圖片額外時間（秒）
-const maxDelay = ref(8)          // 最大顯示時間（秒）
 
 // 從 localStorage 載入設定
 onMounted(() => {
@@ -103,9 +77,7 @@ const loadSettings = () => {
     if (settings) {
       const parsed = JSON.parse(settings)
       autoplayDelay.value = parsed.autoplayDelay || 3
-      longTextDelay.value = parsed.longTextDelay || 2
       imageDelay.value = parsed.imageDelay || 1
-      maxDelay.value = parsed.maxDelay || 8
     }
   } catch (error) {
     console.error('載入設定失敗:', error)
@@ -115,9 +87,7 @@ const loadSettings = () => {
 const updateSettings = () => {
   const settings = {
     autoplayDelay: autoplayDelay.value,
-    longTextDelay: longTextDelay.value,
-    imageDelay: imageDelay.value,
-    maxDelay: maxDelay.value
+    imageDelay: imageDelay.value
   }
   
   try {
@@ -131,9 +101,7 @@ const updateSettings = () => {
 
 const resetToDefault = () => {
   autoplayDelay.value = 3
-  longTextDelay.value = 2
   imageDelay.value = 1
-  maxDelay.value = 8
   updateSettings()
   ElMessage.success('已重置為默認設定')
 }
@@ -141,9 +109,7 @@ const resetToDefault = () => {
 // 導出設定供其他組件使用
 defineExpose({
   autoplayDelay,
-  longTextDelay,
-  imageDelay,
-  maxDelay
+  imageDelay
 })
 </script>
 
@@ -178,6 +144,20 @@ defineExpose({
   gap: 1.5rem;
 }
 
+.settings-description {
+  text-align: center;
+  color: #606266;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #ebeef5;
+  margin-bottom: 0.5rem;
+}
+
+.settings-description p {
+  margin: 0;
+}
+
 .setting-group {
   display: flex;
   flex-direction: column;
@@ -188,6 +168,13 @@ defineExpose({
   font-weight: 500;
   color: #2c3e50;
   font-size: 0.95rem;
+}
+
+.setting-description {
+  font-size: 0.85rem;
+  color: #909399;
+  margin: 0.3rem 0 0.8rem;
+  line-height: 1.4;
 }
 
 .setting-control {

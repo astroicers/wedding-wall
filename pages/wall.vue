@@ -10,9 +10,29 @@
       </div>
     </div>
     
+    <!-- 祝福牆標題 -->
+    <div class="wall-header" v-if="messages.length > 0">
+      <h1 class="wall-title" :style="{ color: titleSettings.titleColor }">{{ titleSettings.wallTitle }}</h1>
+      <p class="wall-subtitle" v-if="titleSettings.wallSubtitle" :style="{ color: titleSettings.titleColor }">{{ titleSettings.wallSubtitle }}</p>
+    </div>
+    
     <!-- 祝福牆內容 -->
     <div class="wall" v-if="messages.length > 0">
-      <MessageCard :message="messages[current]" />
+      <div class="message-container">
+        <transition name="fade" mode="out-in">
+          <MessageCard :message="messages[current]" :key="current" />
+        </transition>
+      </div>
+      
+      <!-- 進度指示器 -->
+      <div class="progress-indicator">
+        <span 
+          v-for="(msg, index) in messages" 
+          :key="index"
+          class="progress-dot"
+          :class="{ active: index === current }"
+        ></span>
+      </div>
     </div>
     
     <!-- 空狀態 -->
@@ -32,6 +52,11 @@
   import { ArrowLeft, Picture } from '@element-plus/icons-vue'
   
   const current = ref(0)
+  const titleSettings = ref({
+    wallTitle: '婚禮祝福牆',
+    wallSubtitle: '',
+    titleColor: '#ffffff'
+  })
   
   // 使用 Pinia Stores
   const messagesStore = useMessagesStore()
@@ -64,9 +89,24 @@
   })
 
   
+  // 載入標題設定
+  const loadTitleSettings = () => {
+    try {
+      const settings = localStorage.getItem('wallTitleSettings')
+      if (settings) {
+        titleSettings.value = { ...titleSettings.value, ...JSON.parse(settings) }
+      }
+    } catch (error) {
+      console.error('載入標題設定失敗:', error)
+    }
+  }
+  
   onMounted(async () => {
     // 設定當前頁面
     uiStore.setCurrentPage('wall')
+    
+    // 載入標題設定
+    loadTitleSettings()
     
     // 使用 Pinia stores 載入資料
     await Promise.all([
@@ -99,11 +139,18 @@
       }
     }
     
+    // 監聽標題更新
+    const handleTitleUpdate = (event: CustomEvent) => {
+      titleSettings.value = { ...titleSettings.value, ...event.detail }
+    }
+    
     window.addEventListener('message', handleBackgroundUpdate)
+    window.addEventListener('wallTitleUpdated', handleTitleUpdate)
     
     // 清理事件監聽器
     onUnmounted(() => {
       window.removeEventListener('message', handleBackgroundUpdate)
+      window.removeEventListener('wallTitleUpdated', handleTitleUpdate)
     })
   })
   </script>
@@ -118,6 +165,8 @@
     left: 0;
     z-index: 9999;
     overflow: hidden;
+    display: flex;
+    flex-direction: column;
   }
 
   /* 返回按鈕容器 - 隱藏區域 */
@@ -163,14 +212,88 @@
     font-weight: 500;
   }
 
+  /* 標題區域 */
+  .wall-header {
+    position: relative;
+    text-align: center;
+    padding: 2rem 1rem 1rem;
+    background: rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  .wall-title {
+    margin: 0;
+    font-size: 2.5rem;
+    font-weight: bold;
+    text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.4);
+    letter-spacing: 2px;
+  }
+  
+  .wall-subtitle {
+    margin: 0.5rem 0 0;
+    font-size: 1.2rem;
+    opacity: 0.9;
+    text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.4);
+  }
+  
   .wall {
+    flex: 1;
     width: 100%;
-    height: 100vh;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
     padding: 2rem;
     box-sizing: border-box;
+    position: relative;
+  }
+  
+  .message-container {
+    width: 100%;
+    max-width: 800px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  /* 進度指示器 */
+  .progress-indicator {
+    position: absolute;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 0.5rem;
+    padding: 0.75rem;
+    background: rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(10px);
+    border-radius: 30px;
+  }
+  
+  .progress-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    transition: all 0.3s ease;
+  }
+  
+  .progress-dot.active {
+    background: white;
+    transform: scale(1.5);
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.6);
+  }
+  
+  /* 轉場動畫 */
+  .fade-enter-active,
+  .fade-leave-active {
+    transition: opacity 0.5s ease;
+  }
+  
+  .fade-enter-from,
+  .fade-leave-to {
+    opacity: 0;
   }
 
   .empty-state {
@@ -216,8 +339,20 @@
       font-size: 0.8rem;
     }
     
+    .wall-title {
+      font-size: 2rem;
+    }
+    
+    .wall-subtitle {
+      font-size: 1rem;
+    }
+    
     .wall {
       padding: 1rem;
+    }
+    
+    .progress-indicator {
+      bottom: 1rem;
     }
   }
 
@@ -237,8 +372,26 @@
       display: none;
     }
     
+    .wall-title {
+      font-size: 1.5rem;
+    }
+    
+    .wall-subtitle {
+      font-size: 0.9rem;
+    }
+    
     .wall {
       padding: 0.5rem;
+    }
+    
+    .progress-indicator {
+      bottom: 0.5rem;
+      padding: 0.5rem;
+    }
+    
+    .progress-dot {
+      width: 6px;
+      height: 6px;
     }
   }
 

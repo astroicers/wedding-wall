@@ -160,9 +160,7 @@ const currentEffect = ref('coverflow')
 // 設定項目
 const wallSettings = ref({
   autoplayDelay: 3,
-  longTextDelay: 2,
-  imageDelay: 1,
-  maxDelay: 8
+  imageDelay: 1
 })
 
 // 載入設定
@@ -183,17 +181,12 @@ const getDynamicDelay = (message: any) => {
   
   let baseTime = wallSettings.value.autoplayDelay * 1000 // 基礎時間
   
-  // 根據文字長度調整
-  if (message.text && message.text.length > 50) {
-    baseTime += wallSettings.value.longTextDelay * 1000 // 長文字額外時間
-  }
-  
   // 有照片時增加時間
   if (message.photo) {
     baseTime += wallSettings.value.imageDelay * 1000 // 照片額外時間
   }
   
-  return Math.min(baseTime, wallSettings.value.maxDelay * 1000) // 最大時間限制
+  return baseTime
 }
 
 // 自動播放配置

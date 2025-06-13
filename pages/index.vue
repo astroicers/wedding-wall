@@ -116,6 +116,11 @@
     <div class="settings-section">
       <WallSettings />
     </div>
+    
+    <!-- 祝福牆標題設定區域 -->
+    <div class="title-settings-section">
+      <WallTitleSettings />
+    </div>
 
     <!-- 認證登入區域 -->
     <div class="auth-section">
@@ -165,6 +170,7 @@
 <script setup lang="ts">
 import BackgroundUpload from '~/components/BackgroundUpload.vue'
 import WallSettings from '~/components/WallSettings.vue'
+import WallTitleSettings from '~/components/WallTitleSettings.vue'
 import { Picture, Upload, ChatDotRound, Star, MagicStick, VideoCamera, Document } from '@element-plus/icons-vue'
 
 // 使用 Pinia Stores
