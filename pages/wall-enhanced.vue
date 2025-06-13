@@ -15,8 +15,9 @@
       <!-- Swiper 輪播 -->
       <swiper
         :modules="modules"
-        :slides-per-view="1"
-        :space-between="0"
+        :slides-per-view="3"
+        :space-between="30"
+        :centered-slides="true"
         :autoplay="autoplayConfig"
         :pagination="{ 
           clickable: true,
@@ -26,8 +27,14 @@
           nextEl: '.swiper-button-next',
           prevEl: '.swiper-button-prev'
         }"
-        :effect="'fade'"
-        :fade-effect="{ crossFade: true }"
+        :effect="'coverflow'"
+        :coverflow-effect="{
+          rotate: 15,
+          stretch: 0,
+          depth: 200,
+          modifier: 1,
+          slideShadows: true
+        }"
         :keyboard="{ enabled: true }"
         :loop="true"
         :grab-cursor="true"
@@ -111,7 +118,7 @@
 
 <script setup lang="ts">
 import { Swiper, SwiperSlide } from 'swiper/vue'
-import { Navigation, Pagination, Autoplay, EffectFade, EffectCube, EffectFlip, Keyboard } from 'swiper/modules'
+import { Navigation, Pagination, Autoplay, EffectFade, EffectCube, EffectFlip, EffectCoverflow, Keyboard } from 'swiper/modules'
 import InstagramPost from '~/components/InstagramPost.vue'
 import { 
   ArrowLeft, 
@@ -131,8 +138,9 @@ import 'swiper/css/autoplay'
 import 'swiper/css/effect-fade'
 import 'swiper/css/effect-cube'
 import 'swiper/css/effect-flip'
+import 'swiper/css/effect-coverflow'
 
-const modules = [Navigation, Pagination, Autoplay, EffectFade, EffectCube, EffectFlip, Keyboard]
+const modules = [Navigation, Pagination, Autoplay, EffectFade, EffectCube, EffectFlip, EffectCoverflow, Keyboard]
 
 // Pinia Stores
 const messagesStore = useMessagesStore()
@@ -147,25 +155,45 @@ const isPaused = ref(false)
 const showControls = ref(false)
 const isControlsForced = ref(false)
 const showIndicator = ref(true)
-const currentEffect = ref('fade')
+const currentEffect = ref('coverflow')
+
+// 設定項目
+const wallSettings = ref({
+  autoplayDelay: 3,
+  longTextDelay: 2,
+  imageDelay: 1,
+  maxDelay: 8
+})
+
+// 載入設定
+const loadSettings = () => {
+  try {
+    const settings = localStorage.getItem('wallSettings')
+    if (settings) {
+      wallSettings.value = { ...wallSettings.value, ...JSON.parse(settings) }
+    }
+  } catch (error) {
+    console.error('載入設定失敗:', error)
+  }
+}
 
 // 動態切換時間配置
 const getDynamicDelay = (message: any) => {
-  if (!message) return 3000
+  if (!message) return wallSettings.value.autoplayDelay * 1000
   
-  let baseTime = 3000 // 基礎時間 3秒
+  let baseTime = wallSettings.value.autoplayDelay * 1000 // 基礎時間
   
   // 根據文字長度調整
   if (message.text && message.text.length > 50) {
-    baseTime += 2000 // 長文字 +2秒
+    baseTime += wallSettings.value.longTextDelay * 1000 // 長文字額外時間
   }
   
   // 有照片時增加時間
   if (message.photo) {
-    baseTime += 1000 // 有照片 +1秒
+    baseTime += wallSettings.value.imageDelay * 1000 // 照片額外時間
   }
   
-  return Math.min(baseTime, 8000) // 最多8秒
+  return Math.min(baseTime, wallSettings.value.maxDelay * 1000) // 最大時間限制
 }
 
 // 自動播放配置
@@ -228,7 +256,7 @@ const toggleIndicator = () => {
 }
 
 const changeEffect = () => {
-  const effects = ['fade', 'cube', 'flip']
+  const effects = ['coverflow', 'fade', 'cube', 'flip']
   const currentIdx = effects.indexOf(currentEffect.value)
   const nextIdx = (currentIdx + 1) % effects.length
   currentEffect.value = effects[nextIdx]
@@ -276,6 +304,9 @@ onMounted(async () => {
   // 設定當前頁面
   uiStore.setCurrentPage('wall')
   
+  // 載入設定
+  loadSettings()
+  
   // 載入資料
   await Promise.all([
     messagesStore.fetchMessages(),
@@ -304,24 +335,36 @@ onMounted(async () => {
   }
   window.addEventListener('message', handleBackgroundUpdate)
   
+  // 監聽設定更新
+  const handleSettingsUpdate = (event: CustomEvent) => {
+    wallSettings.value = { ...wallSettings.value, ...event.detail }
+  }
+  window.addEventListener('wallSettingsUpdated', handleSettingsUpdate)
+  
   // 清理
   onUnmounted(() => {
     clearInterval(dataInterval)
     clearInterval(backgroundInterval)
     document.removeEventListener('keydown', handleKeydown)
     window.removeEventListener('message', handleBackgroundUpdate)
+    window.removeEventListener('wallSettingsUpdated', handleSettingsUpdate)
   })
 })
 </script>
 
 <style scoped>
 .wall-page {
-  position: relative;
-  width: 100%;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
   height: 100vh;
   overflow: hidden;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   transition: all 0.5s ease;
+  margin: 0;
+  padding: 0;
+  z-index: 1;
 }
 
 .back-button-container {
@@ -369,6 +412,21 @@ onMounted(async () => {
   flex: 1;
   width: 100%;
   height: 100%;
+  padding: 50px 0;
+}
+
+.message-swiper .swiper-slide {
+  transition: all 0.3s ease;
+}
+
+.message-swiper .swiper-slide-active {
+  transform: scale(1.1) !important;
+  z-index: 10 !important;
+}
+
+.message-swiper .swiper-slide:not(.swiper-slide-active) {
+  opacity: 0.7;
+  transform: scale(0.85);
 }
 
 .custom-nav-button {

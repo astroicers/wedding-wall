@@ -1,7 +1,22 @@
 <template>
     <el-form @submit.prevent>
+      <el-form-item label="您的姓名">
+        <el-input 
+          v-model="name" 
+          placeholder="請輸入您的姓名" 
+          :disabled="uploading"
+        />
+      </el-form-item>
       <el-form-item label="祝福的話">
-        <el-input v-model="text" placeholder="請輸入祝福內容" type="textarea" :rows="3" />
+        <el-input 
+          v-model="text" 
+          placeholder="請輸入祝福內容（最多50字）" 
+          type="textarea" 
+          :rows="3"
+          maxlength="50"
+          show-word-limit
+          :disabled="uploading"
+        />
       </el-form-item>
       <el-form-item label="上傳圖片">
         <el-upload
@@ -38,11 +53,11 @@
   import { ref } from 'vue'
   import { ElMessage } from 'element-plus'
   
+  const name = ref('')
   const text = ref('')
   const file = ref<File | null>(null)
   const uploading = ref(false)
   const previewUrl = ref('')
-  const auth = useAuth()
   const { uploadMessage } = useApi()
   const { isValidImageType, getImagePreviewUrl, formatFileSize } = useMinio()
   
@@ -78,8 +93,8 @@
   }
   
   async function submit() {
-    if (!auth.value) {
-      ElMessage.error('請先登入')
+    if (!name.value.trim()) {
+      ElMessage.error('請輸入您的姓名')
       return
     }
     
@@ -93,12 +108,17 @@
       return
     }
 
+    if (text.value.length > 50) {
+      ElMessage.error('祝福內容不能超過50字')
+      return
+    }
+
     uploading.value = true
     
     try {
       const formData = new FormData()
       formData.append('file', file.value)
-      formData.append('name', auth.value)
+      formData.append('name', name.value.trim())
       formData.append('text', text.value)
 
       await uploadMessage(formData)
@@ -106,6 +126,7 @@
       ElMessage.success('祝福已送出！')
       
       // 重置表單
+      name.value = ''
       text.value = ''
       file.value = null
       previewUrl.value = ''

@@ -26,6 +26,21 @@ export default defineEventHandler(async (event) => {
       })
     }
 
+    // 檢查祝福內容長度
+    if (!text.trim()) {
+      throw createError({
+        statusCode: 400,
+        statusMessage: '請輸入祝福內容'
+      })
+    }
+
+    if (text.length > 50) {
+      throw createError({
+        statusCode: 400,
+        statusMessage: '祝福內容不能超過50字'
+      })
+    }
+
     // 檢查檔案類型
     const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif']
     if (!allowedTypes.includes(file.mimetype)) {

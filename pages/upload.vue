@@ -30,12 +30,7 @@ useHead({
   ]
 })
 
-// 檢查是否已登入
-watchEffect(() => {
-  if (!auth.value && process.client) {
-    navigateTo('/')
-  }
-})
+// 移除登入檢查，允許任何人訪問上傳頁面
 </script>
 
 <style scoped>
