@@ -77,10 +77,25 @@
       loadMessages(false)
     }, 5000)
     
-    // 每10秒重新檢查背景圖片是否有更新
+    // 每30秒重新檢查背景圖片是否有更新（減少頻率避免閃爍）
     setInterval(() => {
       loadBackground()
-    }, 10000)
+    }, 30000)
+    
+    // 監聽背景更新訊息
+    const handleBackgroundUpdate = (event: MessageEvent) => {
+      if (event.data && event.data.type === 'BACKGROUND_UPDATED') {
+        // 強制重新載入背景
+        loadBackground(true)
+      }
+    }
+    
+    window.addEventListener('message', handleBackgroundUpdate)
+    
+    // 清理事件監聽器
+    onUnmounted(() => {
+      window.removeEventListener('message', handleBackgroundUpdate)
+    })
   })
   </script>
   

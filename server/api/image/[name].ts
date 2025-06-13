@@ -19,6 +19,9 @@ export default defineEventHandler(async (event) => {
       })
     }
 
+    // 確保 bucket 存在
+    await MinioService.ensureBucket('wedding-wall')
+
     const stream = await MinioService.getFile(name)
 
     // 更準確的 MIME 類型判斷

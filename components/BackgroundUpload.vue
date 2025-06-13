@@ -14,7 +14,7 @@
         <div class="current-background" v-if="currentBackground">
           <p class="label">目前背景：</p>
           <div class="preview-container">
-            <img :src="currentBackground" alt="目前背景" class="background-preview" />
+            <img :src="currentBackground" alt="目前背景" class="background-preview" :key="currentBackground" />
             <div class="preview-overlay">
               <el-button 
                 type="danger" 
@@ -29,7 +29,18 @@
         </div>
         
         <div class="upload-section">
+          <div v-if="currentBackground" class="upload-disabled">
+            <div class="upload-area disabled">
+              <el-icon size="48" color="#C0C4CC">
+                <Upload />
+              </el-icon>
+              <p>已有背景圖片</p>
+              <p class="upload-tip warning">請先移除舊背景才能上傳新背景</p>
+            </div>
+          </div>
+          
           <el-upload
+            v-else
             class="background-uploader"
             :on-change="onFileChange"
             :on-remove="onFileRemove"
@@ -78,23 +89,23 @@ const selectedFile = ref<File | null>(null)
 const previewUrl = ref('')
 const uploading = ref(false)
 const removing = ref(false)
-const currentBackground = ref('')
 
 const { formatFileSize } = useMinio()
-const { updateBackground } = useBackgroundStore()
+const { getBackgroundUrl, updateBackground, loadBackground } = useBackgroundStore()
 
-// 載入當前背景
-const loadCurrentBackground = async () => {
-  try {
-    const response = await fetch('/api/wall-background')
-    if (response.ok) {
-      const data = await response.json()
-      currentBackground.value = data.backgroundUrl || ''
-    }
-  } catch (error) {
-    console.log('無法載入當前背景')
+// 使用全局背景狀態，並加入強制重新載入機制
+const currentBackground = computed(() => {
+  const url = getBackgroundUrl()
+  // 為圖像 URL 加入強制重新載入參數，避免瀏覽器快取
+  if (url && url.trim()) {
+    const separator = url.includes('?') ? '&' : '?'
+    return `${url}${separator}reload=${Date.now()}`
   }
-}
+  return url
+})
+
+// 載入當前背景 - 使用全局狀態管理
+const loadCurrentBackground = () => loadBackground()
 
 const onFileChange = async (uploadFile: any) => {
   const file = uploadFile.raw
@@ -147,13 +158,24 @@ const uploadBackground = async () => {
     
     if (response.ok) {
       const data = await response.json()
-      currentBackground.value = data.backgroundUrl
+      console.log('背景上傳成功:', data)
+      
       // 更新全局背景狀態
       updateBackground(data.backgroundUrl)
+      
       ElMessage.success('背景設定成功！')
       onFileRemove()
+      
+      // 通知其他頁面背景已更新
+      if (window.parent) {
+        window.parent.postMessage({ type: 'BACKGROUND_UPDATED' }, '*')
+      }
+      
+      // 確保 UI 狀態同步
+      await nextTick()
     } else {
-      throw new Error('上傳失敗')
+      const errorData = await response.json()
+      throw new Error(errorData.statusMessage || '上傳失敗')
     }
   } catch (error) {
     ElMessage.error('上傳失敗，請重試')
@@ -172,10 +194,30 @@ const removeBackground = async () => {
     })
     
     if (response.ok) {
-      currentBackground.value = ''
-      // 更新全局背景狀態
+      const data = await response.json()
+      console.log('背景移除完成:', data)
+      
+      // 強制清除全局背景狀態
       updateBackground('')
-      ElMessage.success('背景已移除')
+      
+      // 強制重新載入背景狀態
+      await loadBackground(true)
+      
+      // 強制清除瀏覽器圖像快取
+      const imgElements = document.querySelectorAll('img[src*="wedding-background"]')
+      imgElements.forEach(img => {
+        const imgEl = img as HTMLImageElement
+        const currentSrc = imgEl.src
+        imgEl.src = ''
+        setTimeout(() => {
+          imgEl.src = currentSrc + (currentSrc.includes('?') ? '&' : '?') + 'nocache=' + Date.now()
+        }, 10)
+      })
+      
+      ElMessage.success('背景已移除，現在可以上傳新背景了')
+      
+      // 刷新頁面狀態，確保 UI 更新
+      await nextTick()
     } else {
       throw new Error('移除失敗')
     }
@@ -188,7 +230,35 @@ const removeBackground = async () => {
 }
 
 onMounted(() => {
-  loadCurrentBackground()
+  // 強制從 MinIO 重新載入背景狀態，避免顯示快取的預覽圖
+  loadBackground(true)
+  
+  // 監聽頁面重新整理事件（beforeunload）
+  const handleBeforeUnload = () => {
+    // 清除所有背景圖像的快取
+    const imgElements = document.querySelectorAll('img[src*="wedding-background"], img[src*="background-"]')
+    imgElements.forEach(img => {
+      const imgEl = img as HTMLImageElement
+      imgEl.src = ''
+    })
+  }
+  
+  window.addEventListener('beforeunload', handleBeforeUnload)
+  
+  // 頁面可見性變化時重新載入
+  const handleVisibilityChange = () => {
+    if (!document.hidden) {
+      loadBackground(true)
+    }
+  }
+  
+  document.addEventListener('visibilitychange', handleVisibilityChange)
+  
+  // 清理事件監聽器
+  onUnmounted(() => {
+    window.removeEventListener('beforeunload', handleBeforeUnload)
+    document.removeEventListener('visibilitychange', handleVisibilityChange)
+  })
 })
 </script>
 
@@ -266,14 +336,33 @@ onMounted(() => {
   border-color: #409EFF;
 }
 
+.upload-area.disabled {
+  border-color: #dcdfe6;
+  background: #f5f7fa;
+  cursor: not-allowed;
+}
+
+.upload-area.disabled:hover {
+  border-color: #dcdfe6;
+}
+
 .upload-area p {
   margin: 0.5rem 0;
   color: #606266;
 }
 
+.upload-area.disabled p {
+  color: #c0c4cc;
+}
+
 .upload-tip {
   font-size: 0.8rem;
   color: #909399;
+}
+
+.upload-tip.warning {
+  color: #e6a23c;
+  font-weight: 500;
 }
 
 .file-preview {

@@ -3,6 +3,9 @@ import { streamToBuffer } from '~/server/utils/stream'
 
 export default defineEventHandler(async () => {
   try {
+    // 確保 bucket 存在
+    await MinioService.ensureBucket('wedding-wall')
+    
     const metadataFiles = await MinioService.listFiles('metadata/')
     
     if (metadataFiles.length === 0) {

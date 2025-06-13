@@ -38,6 +38,9 @@ export default defineEventHandler(async (event) => {
     const fileBuffer = await readFile(file.filepath)
     const filename = `${Date.now()}-${file.originalFilename}`
 
+    // 確保 bucket 存在
+    await MinioService.ensureBucket('wedding-wall')
+
     // 上傳圖片
     await MinioService.uploadFile(filename, fileBuffer, file.mimetype)
 

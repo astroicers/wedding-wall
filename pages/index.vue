@@ -117,7 +117,33 @@ useHead({
 
 // 載入背景圖片
 onMounted(() => {
-  loadBackground()
+  // 強制從 MinIO 重新取得背景圖，確保與伺服器狀態同步
+  loadBackground(true)
+})
+
+// 監聽頁面顯示事件（從其他頁面返回時重新載入）
+onMounted(() => {
+  const handleVisibilityChange = () => {
+    if (!document.hidden) {
+      // 頁面重新顯示時強制重新載入背景
+      loadBackground(true)
+    }
+  }
+  
+  document.addEventListener('visibilitychange', handleVisibilityChange)
+  
+  // 監聽頁面焦點事件
+  const handleFocus = () => {
+    loadBackground(true)
+  }
+  
+  window.addEventListener('focus', handleFocus)
+  
+  // 清理事件監聽器
+  onUnmounted(() => {
+    document.removeEventListener('visibilitychange', handleVisibilityChange)
+    window.removeEventListener('focus', handleFocus)
+  })
 })
 </script>
 
