@@ -340,7 +340,7 @@
               active-text="開啟"
               inactive-text="關閉"
             />
-            <div class="form-help">新留言是否自動通過審核</div>
+            <div class="form-help">開啟後，新留言將自動通過審核並顯示在祝福牆上</div>
           </el-form-item>
           
           <el-form-item label="顯示未審核">
@@ -349,7 +349,27 @@
               active-text="顯示"
               inactive-text="隱藏"
             />
-            <div class="form-help">祝福牆是否顯示待審核的留言</div>
+            <div class="form-help">開啟後，祝福牆將同時顯示待審核的留言（橘色標示）</div>
+          </el-form-item>
+          
+          <el-form-item label="自動通過關鍵字">
+            <el-input 
+              v-model="settings.autoApproveKeywords"
+              placeholder="例如：祝福,恭喜,幸福"
+              type="textarea"
+              :rows="2"
+            />
+            <div class="form-help">包含這些關鍵字的留言將自動通過審核（用逗號分隔）</div>
+          </el-form-item>
+          
+          <el-form-item label="自動拒絕關鍵字">
+            <el-input 
+              v-model="settings.autoRejectKeywords"
+              placeholder="例如：廣告,垃圾,不當"
+              type="textarea"
+              :rows="2"
+            />
+            <div class="form-help">包含這些關鍵字的留言將自動被拒絕（用逗號分隔）</div>
           </el-form-item>
         </el-form>
       </div>
@@ -590,59 +610,107 @@ const refreshMessages = () => {
 }
 
 // 儲存設定
-const saveSettings = () => {
+const saveSettings = async () => {
   try {
-    localStorage.setItem('adminSettings', JSON.stringify(settings.value))
-    localStorage.setItem('wallSettings', JSON.stringify({
-      autoplayDelay: settings.value.autoplayDelay,
-      imageDelay: settings.value.imageDelay
-    }))
-    localStorage.setItem('wallTitleSettings', JSON.stringify({
-      wallTitle: settings.value.wallTitle,
-      wallSubtitle: settings.value.wallSubtitle,
-      titleColor: settings.value.titleColor
-    }))
+    // 儲存到伺服器端
+    const response = await fetch('/api/admin/settings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ settings: settings.value })
+    })
     
-    // 觸發設定更新事件
-    window.dispatchEvent(new CustomEvent('wallSettingsUpdated', {
-      detail: {
+    const result = await response.json()
+    
+    if (result.success) {
+      // 同時儲存到 localStorage 以供客戶端快速存取
+      localStorage.setItem('adminSettings', JSON.stringify(settings.value))
+      localStorage.setItem('wallSettings', JSON.stringify({
         autoplayDelay: settings.value.autoplayDelay,
         imageDelay: settings.value.imageDelay
-      }
-    }))
-    
-    window.dispatchEvent(new CustomEvent('wallTitleUpdated', {
-      detail: {
+      }))
+      localStorage.setItem('wallTitleSettings', JSON.stringify({
         wallTitle: settings.value.wallTitle,
         wallSubtitle: settings.value.wallSubtitle,
         titleColor: settings.value.titleColor
-      }
-    }))
-    
-    showSettings.value = false
-    ElMessage.success('設定已儲存')
+      }))
+      
+      // 觸發設定更新事件
+      window.dispatchEvent(new CustomEvent('wallSettingsUpdated', {
+        detail: {
+          autoplayDelay: settings.value.autoplayDelay,
+          imageDelay: settings.value.imageDelay
+        }
+      }))
+      
+      window.dispatchEvent(new CustomEvent('wallTitleUpdated', {
+        detail: {
+          wallTitle: settings.value.wallTitle,
+          wallSubtitle: settings.value.wallSubtitle,
+          titleColor: settings.value.titleColor
+        }
+      }))
+      
+      showSettings.value = false
+      ElMessage.success('設定已儲存')
+      
+      // 重新載入留言以反映新的審核設定
+      await loadMessages()
+    } else {
+      throw new Error(result.error || '儲存失敗')
+    }
   } catch (error) {
+    console.error('儲存設定失敗:', error)
     ElMessage.error('儲存設定失敗')
   }
 }
 
 // 載入設定
-const loadSettings = () => {
+const loadSettings = async () => {
   try {
-    const adminSettings = localStorage.getItem('adminSettings')
-    if (adminSettings) {
-      settings.value = { ...settings.value, ...JSON.parse(adminSettings) }
-    }
+    // 先從伺服器載入設定
+    const response = await fetch('/api/admin/settings')
+    const result = await response.json()
     
-    const titleSettings = localStorage.getItem('wallTitleSettings')
-    if (titleSettings) {
-      const parsed = JSON.parse(titleSettings)
-      settings.value.wallTitle = parsed.wallTitle || '婚禮祝福牆'
-      settings.value.wallSubtitle = parsed.wallSubtitle || ''
-      settings.value.titleColor = parsed.titleColor || '#2c3e50'
+    if (result.success && result.settings) {
+      settings.value = { ...settings.value, ...result.settings }
+      
+      // 同步更新 localStorage
+      localStorage.setItem('adminSettings', JSON.stringify(result.settings))
+      localStorage.setItem('wallSettings', JSON.stringify({
+        autoplayDelay: result.settings.autoplayDelay,
+        imageDelay: result.settings.imageDelay
+      }))
+      localStorage.setItem('wallTitleSettings', JSON.stringify({
+        wallTitle: result.settings.wallTitle,
+        wallSubtitle: result.settings.wallSubtitle,
+        titleColor: result.settings.titleColor
+      }))
+    } else {
+      // 伺服器載入失敗時，嘗試從 localStorage 載入
+      const adminSettings = localStorage.getItem('adminSettings')
+      if (adminSettings) {
+        settings.value = { ...settings.value, ...JSON.parse(adminSettings) }
+      }
+      
+      const titleSettings = localStorage.getItem('wallTitleSettings')
+      if (titleSettings) {
+        const parsed = JSON.parse(titleSettings)
+        settings.value.wallTitle = parsed.wallTitle || '婚禮祝福牆'
+        settings.value.wallSubtitle = parsed.wallSubtitle || ''
+        settings.value.titleColor = parsed.titleColor || '#2c3e50'
+      }
     }
   } catch (error) {
     console.error('載入設定失敗:', error)
+    // 錯誤時從 localStorage 載入
+    try {
+      const adminSettings = localStorage.getItem('adminSettings')
+      if (adminSettings) {
+        settings.value = { ...settings.value, ...JSON.parse(adminSettings) }
+      }
+    } catch (localError) {
+      console.error('從 localStorage 載入設定失敗:', localError)
+    }
   }
 }
 
@@ -766,9 +834,9 @@ useHead({
 })
 
 // 初始化
-onMounted(() => {
-  loadSettings()
-  loadMessages()
+onMounted(async () => {
+  await loadSettings()
+  await loadMessages()
   backgroundStore.loadBackground(true)
 })
 </script>

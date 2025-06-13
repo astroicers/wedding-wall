@@ -1,8 +1,12 @@
 import { MinioService } from '~/server/utils/minio'
+import { Client } from 'minio'
 
 export default defineEventHandler(async (event) => {
   try {
     const bucketName = 'wedding-wall'
+    
+    // 獲取管理員設定
+    const settings = await getAdminSettings()
     
     // 確保 bucket 存在
     await MinioService.ensureBucket(bucketName)
@@ -36,8 +40,9 @@ export default defineEventHandler(async (event) => {
           }
         }
         
-        // 只返回已審核的留言給前端顯示
-        if (messageData.approved === 'approved') {
+        // 根據管理員設定決定要顯示哪些留言
+        const shouldShowMessage = shouldIncludeMessage(messageData, settings)
+        if (shouldShowMessage) {
           messages.push(messageData)
         }
       } catch (error) {
@@ -71,3 +76,75 @@ export default defineEventHandler(async (event) => {
     }
   }
 })
+
+// 決定是否要包含此留言在顯示中
+function shouldIncludeMessage(messageData: any, settings: any): boolean {
+  const approvalStatus = messageData.approved || 'pending'
+  
+  // 總是顯示已審核通過的留言
+  if (approvalStatus === 'approved') {
+    return true
+  }
+  
+  // 從不顯示被拒絕的留言
+  if (approvalStatus === 'rejected') {
+    return false
+  }
+  
+  // 對於待審核的留言，檢查設定
+  if (approvalStatus === 'pending') {
+    return settings.showUnmoderated === true
+  }
+  
+  return false
+}
+
+// 獲取管理員設定
+async function getAdminSettings() {
+  try {
+    const minioClient = new Client({
+      endPoint: 'minio',
+      port: 9000,
+      useSSL: false,
+      accessKey: 'admin',
+      secretKey: 'admin123'
+    })
+
+    const bucketName = 'wedding-wall'
+    const settingsKey = 'admin-settings.json'
+
+    const stream = await minioClient.getObject(bucketName, settingsKey)
+    
+    return new Promise((resolve) => {
+      let settingsData = ''
+      
+      stream.on('data', (chunk) => {
+        settingsData += chunk.toString()
+      })
+      
+      stream.on('end', () => {
+        try {
+          const settings = JSON.parse(settingsData)
+          resolve(settings)
+        } catch (error) {
+          resolve(getDefaultSettings())
+        }
+      })
+      
+      stream.on('error', () => {
+        resolve(getDefaultSettings())
+      })
+    })
+  } catch (error) {
+    return getDefaultSettings()
+  }
+}
+
+function getDefaultSettings() {
+  return {
+    autoApprove: false,
+    showUnmoderated: false,
+    autoApproveKeywords: '',
+    autoRejectKeywords: ''
+  }
+}

@@ -2,6 +2,7 @@ import formidable from 'formidable'
 import { MinioService } from '~/server/utils/minio'
 import { readFile } from 'fs/promises'
 import { randomUUID } from 'crypto'
+import { Client } from 'minio'
 
 export default defineEventHandler(async (event) => {
   try {
@@ -59,13 +60,16 @@ export default defineEventHandler(async (event) => {
     // 上傳圖片
     await MinioService.uploadFile(filename, fileBuffer, file.mimetype)
 
+    // 獲取管理員設定以決定審核狀態
+    const approvalStatus = await determineApprovalStatus(text)
+    
     // 準備 metadata
     const metadata = {
       name,
       text,
       photo: `/api/image/${encodeURIComponent(filename)}`,
-      timestamp: new Date().toISOString(),
-      approved: 'pending' // 新上傳的留言預設為待審核狀態
+      timestamp: Date.now(),
+      approved: approvalStatus
     }
 
     // 上傳 metadata
@@ -90,3 +94,97 @@ export default defineEventHandler(async (event) => {
     })
   }
 })
+
+// 根據管理員設定決定審核狀態
+async function determineApprovalStatus(text: string): Promise<'approved' | 'pending' | 'rejected'> {
+  try {
+    // 獲取管理員設定
+    const settings = await getAdminSettings()
+    
+    // 檢查自動拒絕關鍵字
+    if (settings.autoRejectKeywords) {
+      const rejectKeywords = settings.autoRejectKeywords.split(',').map(k => k.trim()).filter(k => k)
+      for (const keyword of rejectKeywords) {
+        if (text.toLowerCase().includes(keyword.toLowerCase())) {
+          console.log(`留言因包含拒絕關鍵字 "${keyword}" 被自動拒絕:`, text)
+          return 'rejected'
+        }
+      }
+    }
+    
+    // 檢查自動通過關鍵字
+    if (settings.autoApproveKeywords) {
+      const approveKeywords = settings.autoApproveKeywords.split(',').map(k => k.trim()).filter(k => k)
+      for (const keyword of approveKeywords) {
+        if (text.toLowerCase().includes(keyword.toLowerCase())) {
+          console.log(`留言因包含通過關鍵字 "${keyword}" 被自動通過:`, text)
+          return 'approved'
+        }
+      }
+    }
+    
+    // 檢查全局自動審核設定
+    if (settings.autoApprove) {
+      console.log('全局自動審核已啟用，留言自動通過:', text)
+      return 'approved'
+    }
+    
+    // 預設為待審核
+    console.log('留言待審核:', text)
+    return 'pending'
+    
+  } catch (error) {
+    console.error('獲取審核設定失敗，使用預設待審核狀態:', error)
+    return 'pending'
+  }
+}
+
+// 獲取管理員設定
+async function getAdminSettings() {
+  try {
+    const minioClient = new Client({
+      endPoint: 'minio',
+      port: 9000,
+      useSSL: false,
+      accessKey: 'admin',
+      secretKey: 'admin123'
+    })
+
+    const bucketName = 'wedding-wall'
+    const settingsKey = 'admin-settings.json'
+
+    const stream = await minioClient.getObject(bucketName, settingsKey)
+    
+    return new Promise((resolve, reject) => {
+      let settingsData = ''
+      
+      stream.on('data', (chunk) => {
+        settingsData += chunk.toString()
+      })
+      
+      stream.on('end', () => {
+        try {
+          const settings = JSON.parse(settingsData)
+          resolve(settings)
+        } catch (error) {
+          resolve(getDefaultSettings())
+        }
+      })
+      
+      stream.on('error', () => {
+        resolve(getDefaultSettings())
+      })
+    })
+  } catch (error) {
+    return getDefaultSettings()
+  }
+}
+
+function getDefaultSettings() {
+  return {
+    autoApprove: false,
+    showUnmoderated: false,
+    autoApproveKeywords: '',
+    autoRejectKeywords: ''
+  }
+}

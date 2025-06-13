@@ -1,183 +1,211 @@
 <template>
-  <div class="container">
+  <div class="home-page">
     <!-- 主標題區域 -->
-    <div class="header">
-      <h1 class="main-title">🎊 婚禮祝福牆</h1>
-      <p class="subtitle">歡迎上傳照片或留言祝福，為我們留下美好回憶</p>
-    </div>
-
-    <!-- 導航區域 -->
-    <div class="navigation">
-      <el-row :gutter="16" justify="center">
-        <el-col :span="6">
-          <el-card shadow="hover" class="nav-card" @click="navigateTo('/wall')">
-            <div class="nav-content">
-              <el-icon size="32" class="nav-icon">
-                <Picture />
-              </el-icon>
-              <h3>祝福牆</h3>
-              <p>經典版輪播</p>
-            </div>
-          </el-card>
-        </el-col>
-        <el-col :span="6">
-          <el-card shadow="hover" class="nav-card styles-card" @click="navigateTo('/wall-styles')">
-            <div class="nav-content">
-              <el-icon size="32" class="nav-icon">
-                <MagicStick />
-              </el-icon>
-              <h3>風格祝福牆</h3>
-              <p>多種精美風格</p>
-              <el-tag type="warning" size="small" class="new-tag">HOT</el-tag>
-            </div>
-          </el-card>
-        </el-col>
-        <el-col :span="6">
-          <el-card shadow="hover" class="nav-card" @click="navigateTo('/gallery')">
-            <div class="nav-content">
-              <el-icon size="32" class="nav-icon">
-                <PhotoIcon />
-              </el-icon>
-              <h3>相簿</h3>
-              <p>瀏覽所有照片</p>
-            </div>
-          </el-card>
-        </el-col>
-        <el-col :span="6">
-          <el-card shadow="hover" class="nav-card" @click="navigateTo('/upload')">
-            <div class="nav-content">
-              <el-icon size="32" class="nav-icon">
-                <Upload />
-              </el-icon>
-              <h3>上傳祝福</h3>
-              <p>留下美好回憶</p>
-            </div>
-          </el-card>
-        </el-col>
-      </el-row>
-      
-      <!-- 管理功能區域 -->
-      <el-row :gutter="16" justify="center" style="margin-top: 20px;">
-        <el-col :span="8">
-          <el-card shadow="hover" class="nav-card admin-card" @click="navigateTo('/admin')">
-            <div class="nav-content">
-              <el-icon size="32" class="nav-icon">
-                <Tools />
-              </el-icon>
-              <h3>管理控制台</h3>
-              <p>管理留言與設定</p>
-              <el-tag type="info" size="small" class="admin-tag">ADMIN</el-tag>
-            </div>
-          </el-card>
-        </el-col>
-      </el-row>
-      
-      <!-- 風格快捷按鈕 -->
-      <div class="quick-styles">
-        <el-divider>
-          <span class="divider-text">🎨 快速體驗風格</span>
-        </el-divider>
-        
-        <el-row :gutter="12" justify="center">
-          <el-col :span="6">
-            <el-button 
-              type="primary" 
-              @click="navigateTo('/wall-enhanced')"
-              class="style-quick-btn"
-            >
-              <el-icon><Star /></el-icon>
-              Instagram
-            </el-button>
-          </el-col>
-          <el-col :span="6">
-            <el-button 
-              type="success" 
-              @click="navigateTo('/wall-stories')"
-              class="style-quick-btn"
-            >
-              <el-icon><VideoCamera /></el-icon>
-              Stories
-            </el-button>
-          </el-col>
-          <el-col :span="6">
-            <el-button 
-              type="info" 
-              @click="navigateTo('/wall-magazine')"
-              class="style-quick-btn"
-            >
-              <el-icon><Document /></el-icon>
-              Magazine
-            </el-button>
-          </el-col>
-          <el-col :span="6">
-            <el-button 
-              type="warning" 
-              @click="navigateTo('/wall-polaroid')"
-              class="style-quick-btn"
-            >
-              <el-icon><Picture /></el-icon>
-              Polaroid
-            </el-button>
-          </el-col>
-        </el-row>
+    <div class="hero-section">
+      <div class="hero-content">
+        <div class="hero-title">
+          <h1 class="main-title">🎊 婚禮祝福牆</h1>
+          <p class="subtitle">分享美好瞬間，留下永恆祝福</p>
+        </div>
+        <div class="hero-actions">
+          <el-button 
+            type="primary" 
+            size="large" 
+            @click="handleNavigation('/upload')" 
+            class="primary-btn"
+          >
+            <el-icon><Upload /></el-icon>
+            立即上傳祝福
+          </el-button>
+          <el-button 
+            size="large" 
+            @click="handleNavigation('/wall')" 
+            class="secondary-btn"
+          >
+            <el-icon><Picture /></el-icon>
+            觀看祝福牆
+          </el-button>
+        </div>
       </div>
     </div>
 
+    <!-- 主要功能卡片 -->
+    <div class="main-features">
+      <div class="section-header">
+        <h2>探索功能</h2>
+        <p>多種展示方式，讓每一份祝福都閃閃發光</p>
+      </div>
+      
+      <div class="feature-grid">
+        <div class="feature-card primary" @click="handleNavigation('/wall')">
+          <div class="card-icon">
+            <el-icon size="40"><Picture /></el-icon>
+          </div>
+          <div class="card-content">
+            <h3>經典祝福牆</h3>
+            <p>傳統輪播模式，穩重典雅</p>
+          </div>
+          <div class="card-arrow">
+            <el-icon><ArrowRight /></el-icon>
+          </div>
+        </div>
 
-    
+        <div class="feature-card featured" @click="handleNavigation('/wall-styles')">
+          <div class="card-badge">HOT</div>
+          <div class="card-icon">
+            <el-icon size="40"><MagicStick /></el-icon>
+          </div>
+          <div class="card-content">
+            <h3>風格祝福牆</h3>
+            <p>多種精美風格，視覺享受</p>
+          </div>
+          <div class="card-arrow">
+            <el-icon><ArrowRight /></el-icon>
+          </div>
+        </div>
 
-    <!-- 認證登入區域 -->
-    <div class="auth-section">
-      <el-divider>
-        <span class="divider-text">💌 開始留下祝福</span>
-      </el-divider>
-      <div class="auth-hint">
-        <p>點擊上方「上傳祝福」按鈕，填寫姓名並留下美好祝福！</p>
+        <div class="feature-card" @click="handleNavigation('/gallery')">
+          <div class="card-icon">
+            <el-icon size="40"><PhotoIcon /></el-icon>
+          </div>
+          <div class="card-content">
+            <h3>相簿展示</h3>
+            <p>瀏覽所有珍貴回憶</p>
+          </div>
+          <div class="card-arrow">
+            <el-icon><ArrowRight /></el-icon>
+          </div>
+        </div>
+
+        <div class="feature-card admin" @click="handleNavigation('/admin')">
+          <div class="card-badge admin-badge">ADMIN</div>
+          <div class="card-icon">
+            <el-icon size="40"><Tools /></el-icon>
+          </div>
+          <div class="card-content">
+            <h3>管理控制台</h3>
+            <p>留言審核與系統設定</p>
+          </div>
+          <div class="card-arrow">
+            <el-icon><ArrowRight /></el-icon>
+          </div>
+        </div>
       </div>
     </div>
 
-    <!-- 特色說明 -->
-    <div class="features">
-      <el-row :gutter="20">
-        <el-col :span="8">
-          <div class="feature-item">
-            <el-icon size="24" color="#409EFF">
-              <Upload />
-            </el-icon>
+    <!-- 風格預覽 -->
+    <div class="style-showcase">
+      <div class="section-header">
+        <h2>風格預覽</h2>
+        <p>選擇您喜歡的展示風格</p>
+      </div>
+      
+      <div class="style-grid">
+        <div class="style-card" @click="handleNavigation('/wall-enhanced')">
+          <div class="style-preview instagram">
+            <div class="preview-content">
+              <el-icon size="30"><Star /></el-icon>
+              <span>Instagram 風格</span>
+            </div>
+          </div>
+          <div class="style-info">
+            <h4>Instagram 風格</h4>
+            <p>社群媒體風格展示</p>
+          </div>
+        </div>
+
+        <div class="style-card" @click="handleNavigation('/wall-stories')">
+          <div class="style-preview stories">
+            <div class="preview-content">
+              <el-icon size="30"><VideoCamera /></el-icon>
+              <span>Stories 風格</span>
+            </div>
+          </div>
+          <div class="style-info">
+            <h4>Stories 風格</h4>
+            <p>動態故事般的體驗</p>
+          </div>
+        </div>
+
+        <div class="style-card" @click="handleNavigation('/wall-magazine')">
+          <div class="style-preview magazine">
+            <div class="preview-content">
+              <el-icon size="30"><Document /></el-icon>
+              <span>Magazine 風格</span>
+            </div>
+          </div>
+          <div class="style-info">
+            <h4>Magazine 風格</h4>
+            <p>雜誌排版的精緻感</p>
+          </div>
+        </div>
+
+        <div class="style-card" @click="handleNavigation('/wall-polaroid')">
+          <div class="style-preview polaroid">
+            <div class="preview-content">
+              <el-icon size="30"><Picture /></el-icon>
+              <span>Polaroid 風格</span>
+            </div>
+          </div>
+          <div class="style-info">
+            <h4>Polaroid 風格</h4>
+            <p>復古拍立得質感</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 使用指南 -->
+    <div class="guide-section">
+      <div class="section-header">
+        <h2>使用指南</h2>
+        <p>三步驟輕鬆留下美好祝福</p>
+      </div>
+      
+      <div class="guide-steps">
+        <div class="step-item">
+          <div class="step-number">1</div>
+          <div class="step-content">
             <h4>上傳照片</h4>
-            <span>分享美好瞬間</span>
+            <p>選擇一張美好的照片</p>
           </div>
-        </el-col>
-        <el-col :span="8">
-          <div class="feature-item">
-            <el-icon size="24" color="#67C23A">
-              <ChatDotRound />
-            </el-icon>
-            <h4>留言祝福</h4>
-            <span>傳達溫馨心意</span>
+        </div>
+        <div class="step-divider">
+          <el-icon><ArrowRight /></el-icon>
+        </div>
+        <div class="step-item">
+          <div class="step-number">2</div>
+          <div class="step-content">
+            <h4>填寫祝福</h4>
+            <p>留下真誠的祝福文字</p>
           </div>
-        </el-col>
-        <el-col :span="8">
-          <div class="feature-item">
-            <el-icon size="24" color="#E6A23C">
-              <Star />
-            </el-icon>
+        </div>
+        <div class="step-divider">
+          <el-icon><ArrowRight /></el-icon>
+        </div>
+        <div class="step-item">
+          <div class="step-number">3</div>
+          <div class="step-content">
             <h4>即時展示</h4>
-            <span>自動輪播顯示</span>
+            <p>在祝福牆上看到您的祝福</p>
           </div>
-        </el-col>
-      </el-row>
+        </div>
+      </div>
     </div>
-    
   </div>
 </template>
 
 <script setup lang="ts">
-import { Picture, Upload, ChatDotRound, Star, MagicStick, VideoCamera, Document, Tools } from '@element-plus/icons-vue'
-
-// 使用 Pinia Stores
-const backgroundStore = useBackgroundStore()
-const uiStore = useUIStore()
+import { 
+  Picture, 
+  Upload, 
+  Star, 
+  MagicStick, 
+  VideoCamera, 
+  Document, 
+  Tools,
+  ArrowRight
+} from '@element-plus/icons-vue'
 
 // 定義 PhotoIcon 組件
 const PhotoIcon = {
@@ -196,6 +224,11 @@ const PhotoIcon = {
   }
 }
 
+// 導航處理函數
+const handleNavigation = (path: string) => {
+  navigateTo(path)
+}
+
 // 設定頁面 meta
 useHead({
   title: '婚禮祝福牆 - 留下美好回憶',
@@ -206,350 +239,424 @@ useHead({
 
 // 初始化頁面
 onMounted(() => {
-  // 設定當前頁面
-  uiStore.setCurrentPage('home')
-  
-  // 強制從 MinIO 重新取得背景圖，確保與伺服器狀態同步
-  backgroundStore.loadBackground(true)
-  
-  // 監聽頁面顯示事件（從其他頁面返回時重新載入）
-  const handleVisibilityChange = () => {
-    if (!document.hidden) {
-      // 頁面重新顯示時強制重新載入背景
-      backgroundStore.loadBackground(true)
-    }
-  }
-  
-  document.addEventListener('visibilitychange', handleVisibilityChange)
-  
-  // 監聽頁面焦點事件
-  const handleFocus = () => {
-    backgroundStore.loadBackground(true)
-  }
-  
-  window.addEventListener('focus', handleFocus)
-  
-  // 清理事件監聽器
-  onUnmounted(() => {
-    document.removeEventListener('visibilitychange', handleVisibilityChange)
-    window.removeEventListener('focus', handleFocus)
-  })
+  console.log('首頁已載入')
 })
 </script>
 
 <style scoped>
-.container {
-  max-width: 800px;
-  margin: 0 auto;
-  padding: 2rem 1rem;
-  min-height: calc(100vh - 80px);
+.home-page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
 
-/* 主標題區域 */
-.header {
+/* Hero 區域 */
+.hero-section {
+  padding: 80px 20px 60px 20px;
   text-align: center;
-  margin-bottom: 3rem;
+  color: white;
+}
+
+.hero-content {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.hero-title {
+  margin-bottom: 40px;
 }
 
 .main-title {
-  font-size: 2.5rem;
-  font-weight: bold;
-  color: #2c3e50;
-  margin-bottom: 1rem;
-  text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+  font-size: 3.5rem;
+  font-weight: 700;
+  margin-bottom: 20px;
+  text-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  background: linear-gradient(45deg, #fff, #f0f8ff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .subtitle {
+  font-size: 1.4rem;
+  opacity: 0.95;
+  margin: 0;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.hero-actions {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.primary-btn {
+  padding: 15px 30px;
   font-size: 1.1rem;
-  color: #7f8c8d;
-  margin-bottom: 0;
-  line-height: 1.6;
-}
-
-/* 導航區域 */
-.navigation {
-  margin-bottom: 3rem;
-}
-
-.nav-card {
-  cursor: pointer;
+  font-weight: 600;
+  border-radius: 50px;
+  box-shadow: 0 8px 25px rgba(64, 158, 255, 0.3);
   transition: all 0.3s ease;
-  border-radius: 12px;
+}
+
+.primary-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 35px rgba(64, 158, 255, 0.4);
+}
+
+.secondary-btn {
+  padding: 15px 30px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  border-radius: 50px;
+  background: rgba(255, 255, 255, 0.2);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+}
+
+.secondary-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(255, 255, 255, 0.2);
+}
+
+/* 主要功能區域 */
+.main-features {
+  padding: 60px 20px;
+  background: white;
+}
+
+.section-header {
+  text-align: center;
+  margin-bottom: 50px;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.section-header h2 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #2c3e50;
+  margin-bottom: 15px;
+}
+
+.section-header p {
+  font-size: 1.2rem;
+  color: #7f8c8d;
+  margin: 0;
+}
+
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 30px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.feature-card {
+  background: white;
+  border-radius: 20px;
+  padding: 30px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  transition: all 0.4s ease;
+  position: relative;
+  overflow: hidden;
   border: 2px solid transparent;
 }
 
-.nav-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+.feature-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+}
+
+.feature-card.primary {
   border-color: #409EFF;
 }
 
-.nav-card.styles-card {
+.feature-card.primary:hover {
+  background: linear-gradient(135deg, #409EFF, #66b3ff);
+  color: white;
+}
+
+.feature-card.featured {
   background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
   color: white;
-  position: relative;
-  overflow: hidden;
 }
 
-.nav-card.styles-card::before {
-  content: '';
-  position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
-  transform: rotate(45deg);
-  animation: shimmer 3s infinite;
+.feature-card.admin {
+  border-color: #667eea;
 }
 
-.nav-card.styles-card .nav-icon {
-  color: #FFD700;
-}
-
-.nav-card.styles-card .nav-content h3 {
-  color: white;
-}
-
-.nav-card.styles-card .nav-content p {
-  color: rgba(255,255,255,0.9);
-}
-
-.nav-card.enhanced {
+.feature-card.admin:hover {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
-  position: relative;
-  overflow: hidden;
 }
 
-.nav-card.enhanced::before {
-  content: '';
+.card-badge {
   position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
-  transform: rotate(45deg);
-  animation: shimmer 3s infinite;
+  top: 15px;
+  right: 15px;
+  background: rgba(255, 255, 255, 0.9);
+  color: #f5576c;
+  padding: 5px 12px;
+  border-radius: 15px;
+  font-size: 0.8rem;
+  font-weight: 600;
 }
 
-@keyframes shimmer {
-  0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
-  100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+.admin-badge {
+  background: rgba(255, 255, 255, 0.9);
+  color: #667eea;
 }
 
-.nav-card.enhanced .nav-icon {
-  color: #FFD700;
+.card-icon {
+  margin-bottom: 20px;
+  color: #409EFF;
 }
 
-.nav-card.enhanced .nav-content h3 {
+.feature-card.featured .card-icon {
   color: white;
 }
 
-.nav-card.enhanced .nav-content p {
-  color: rgba(255,255,255,0.9);
+.feature-card:hover .card-icon {
+  color: white;
+  transform: scale(1.1);
 }
 
-.new-tag {
+.card-content h3 {
+  font-size: 1.4rem;
+  font-weight: 600;
+  margin-bottom: 10px;
+  color: inherit;
+}
+
+.card-content p {
+  color: #7f8c8d;
+  margin: 0;
+  line-height: 1.6;
+}
+
+.feature-card:hover .card-content p {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.card-arrow {
   position: absolute;
-  top: 10px;
-  right: 10px;
-  z-index: 2;
-}
-
-.nav-content {
-  text-align: center;
-  padding: 1rem 0;
-}
-
-.nav-icon {
+  bottom: 20px;
+  right: 20px;
+  opacity: 0;
+  transform: translateX(-10px);
+  transition: all 0.3s ease;
   color: #409EFF;
-  margin-bottom: 0.5rem;
 }
 
-.nav-content h3 {
-  margin: 0.5rem 0 0.25rem 0;
-  color: #2c3e50;
-  font-weight: 600;
+.feature-card:hover .card-arrow {
+  opacity: 1;
+  transform: translateX(0);
+  color: white;
 }
 
-.nav-content p {
-  margin: 0;
-  color: #7f8c8d;
-  font-size: 0.9rem;
+/* 風格預覽區域 */
+.style-showcase {
+  padding: 60px 20px;
+  background: #f8f9fa;
 }
 
-
-
-/* 認證區域 */
-.auth-section {
-  margin-bottom: 3rem;
+.style-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 25px;
+  max-width: 1000px;
+  margin: 0 auto;
 }
 
-.divider-text {
-  color: #2c3e50;
-  font-weight: bold;
-  font-size: 1.2rem;
-  padding: 0 1rem;
-  text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+.style-card {
+  background: white;
+  border-radius: 15px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
 
-.auth-hint {
-  text-align: center;
-  margin-top: 1rem;
+.style-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
 }
 
-.auth-hint p {
-  color: #7f8c8d;
-  font-size: 1rem;
-  margin: 0;
-}
-
-/* 特色說明 */
-.features {
-  margin-top: 2rem;
-}
-
-.feature-item {
-  text-align: center;
-  padding: 1rem;
-  background: rgba(255, 255, 255, 0.8);
-  border-radius: 8px;
-  margin-bottom: 1rem;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-}
-
-.feature-item h4 {
-  margin: 0.5rem 0 0.25rem 0;
-  color: #2c3e50;
-  font-size: 1rem;
-  font-weight: 600;
-}
-
-.feature-item span {
-  color: #7f8c8d;
-  font-size: 0.85rem;
-}
-
-/* 快速風格按鈕區域 */
-.quick-styles {
-  margin-top: 2rem;
-  padding-top: 1rem;
-}
-
-.style-quick-btn {
-  width: 100%;
+.style-preview {
+  height: 120px;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  font-size: 0.9rem;
-  font-weight: 500;
-  padding: 10px 8px;
-  border-radius: 8px;
-  transition: all 0.3s ease;
+  position: relative;
+  color: white;
 }
 
-.style-quick-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+.style-preview.instagram {
+  background: linear-gradient(45deg, #f093fb, #f5576c);
+}
+
+.style-preview.stories {
+  background: linear-gradient(45deg, #667eea, #764ba2);
+}
+
+.style-preview.magazine {
+  background: linear-gradient(45deg, #4facfe, #00f2fe);
+}
+
+.style-preview.polaroid {
+  background: linear-gradient(45deg, #43e97b, #38f9d7);
+}
+
+.preview-content {
+  text-align: center;
+}
+
+.preview-content span {
+  display: block;
+  margin-top: 10px;
+  font-weight: 600;
+}
+
+.style-info {
+  padding: 20px;
+}
+
+.style-info h4 {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #2c3e50;
+}
+
+.style-info p {
+  color: #7f8c8d;
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+/* 使用指南 */
+.guide-section {
+  padding: 60px 20px;
+  background: white;
+}
+
+.guide-steps {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  max-width: 800px;
+  margin: 0 auto;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.step-item {
+  text-align: center;
+  flex: 1;
+  min-width: 200px;
+}
+
+.step-number {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  font-size: 1.5rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 20px auto;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.step-content h4 {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #2c3e50;
+}
+
+.step-content p {
+  color: #7f8c8d;
+  margin: 0;
+}
+
+.step-divider {
+  color: #667eea;
+  font-size: 1.5rem;
+  margin: 0 20px;
 }
 
 /* 響應式設計 */
 @media (max-width: 768px) {
-  .container {
-    padding: 1rem 0.5rem;
+  .main-title {
+    font-size: 2.5rem;
+  }
+  
+  .subtitle {
+    font-size: 1.1rem;
+  }
+  
+  .hero-actions {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .primary-btn,
+  .secondary-btn {
+    width: 100%;
+    max-width: 300px;
+  }
+  
+  .feature-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  
+  .style-grid {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  }
+  
+  .guide-steps {
+    flex-direction: column;
+  }
+  
+  .step-divider {
+    transform: rotate(90deg);
+    margin: 10px 0;
+  }
+  
+  .section-header h2 {
+    font-size: 2rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-section {
+    padding: 60px 15px 40px 15px;
   }
   
   .main-title {
     font-size: 2rem;
   }
   
-  .subtitle {
-    font-size: 1rem;
+  .main-features,
+  .style-showcase,
+  .guide-section {
+    padding: 40px 15px;
   }
   
-  .nav-content {
-    padding: 0.75rem 0;
+  .feature-card {
+    padding: 25px;
   }
-  
-  .nav-content h3 {
-    font-size: 1rem;
-  }
-  
-  .nav-content p {
-    font-size: 0.8rem;
-  }
-  
-  .feature-item {
-    margin-bottom: 0.75rem;
-  }
-  
-  .style-quick-btn {
-    font-size: 0.8rem;
-    padding: 8px 6px;
-  }
-}
-
-@media (max-width: 480px) {
-  .main-title {
-    font-size: 1.75rem;
-  }
-  
-  .navigation .el-col {
-    margin-bottom: 1rem;
-  }
-  
-  .quick-styles .el-col {
-    margin-bottom: 0.75rem;
-  }
-  
-  .style-quick-btn {
-    font-size: 0.75rem;
-    padding: 6px 4px;
-  }
-}
-
-/* 管理員卡片 */
-.admin-card {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  position: relative;
-  overflow: hidden;
-}
-
-.admin-card::before {
-  content: '';
-  position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
-  transform: rotate(45deg);
-  animation: shimmer 3s infinite;
-}
-
-.admin-card .nav-icon {
-  color: #FFD700;
-}
-
-.admin-card .nav-content h3 {
-  color: white;
-}
-
-.admin-card .nav-content p {
-  color: rgba(255,255,255,0.9);
-}
-
-.admin-tag {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  z-index: 2;
-  background: rgba(255, 255, 255, 0.2) !important;
-  color: white !important;
-  border: 1px solid rgba(255, 255, 255, 0.3) !important;
 }
 </style>
