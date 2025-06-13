@@ -9,18 +9,30 @@
     <!-- 導航區域 -->
     <div class="navigation">
       <el-row :gutter="16" justify="center">
-        <el-col :span="8">
+        <el-col :span="6">
           <el-card shadow="hover" class="nav-card" @click="navigateTo('/wall')">
             <div class="nav-content">
               <el-icon size="32" class="nav-icon">
                 <Picture />
               </el-icon>
               <h3>祝福牆</h3>
-              <p>即時輪播展示</p>
+              <p>經典版輪播</p>
             </div>
           </el-card>
         </el-col>
-        <el-col :span="8">
+        <el-col :span="6">
+          <el-card shadow="hover" class="nav-card enhanced" @click="navigateTo('/wall-enhanced')">
+            <div class="nav-content">
+              <el-icon size="32" class="nav-icon">
+                <MagicStick />
+              </el-icon>
+              <h3>增強祝福牆</h3>
+              <p>互動式體驗</p>
+              <el-tag type="success" size="small" class="new-tag">NEW</el-tag>
+            </div>
+          </el-card>
+        </el-col>
+        <el-col :span="6">
           <el-card shadow="hover" class="nav-card" @click="navigateTo('/gallery')">
             <div class="nav-content">
               <el-icon size="32" class="nav-icon">
@@ -28,6 +40,17 @@
               </el-icon>
               <h3>相簿</h3>
               <p>瀏覽所有照片</p>
+            </div>
+          </el-card>
+        </el-col>
+        <el-col :span="6">
+          <el-card shadow="hover" class="nav-card" @click="navigateTo('/upload')">
+            <div class="nav-content">
+              <el-icon size="32" class="nav-icon">
+                <Upload />
+              </el-icon>
+              <h3>上傳祝福</h3>
+              <p>留下美好回憶</p>
             </div>
           </el-card>
         </el-col>
@@ -85,7 +108,7 @@
 <script setup lang="ts">
 import AuthPanel from '~/components/AuthPanel.vue'
 import BackgroundUpload from '~/components/BackgroundUpload.vue'
-import { Picture, Upload, ChatDotRound, Star } from '@element-plus/icons-vue'
+import { Picture, Upload, ChatDotRound, Star, MagicStick } from '@element-plus/icons-vue'
 
 // 使用 Pinia Stores
 const backgroundStore = useBackgroundStore()
@@ -194,6 +217,49 @@ onMounted(() => {
   transform: translateY(-4px);
   box-shadow: 0 8px 25px rgba(0,0,0,0.15);
   border-color: #409EFF;
+}
+
+.nav-card.enhanced {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  position: relative;
+  overflow: hidden;
+}
+
+.nav-card.enhanced::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
+  transform: rotate(45deg);
+  animation: shimmer 3s infinite;
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+  100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+}
+
+.nav-card.enhanced .nav-icon {
+  color: #FFD700;
+}
+
+.nav-card.enhanced .nav-content h3 {
+  color: white;
+}
+
+.nav-card.enhanced .nav-content p {
+  color: rgba(255,255,255,0.9);
+}
+
+.new-tag {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 2;
 }
 
 .nav-content {
