@@ -64,7 +64,8 @@ export default defineEventHandler(async (event) => {
       name,
       text,
       photo: `/api/image/${encodeURIComponent(filename)}`,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      approved: 'pending' // 新上傳的留言預設為待審核狀態
     }
 
     // 上傳 metadata

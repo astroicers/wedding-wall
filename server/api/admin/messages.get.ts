@@ -36,38 +36,59 @@ export default defineEventHandler(async (event) => {
           }
         }
         
-        // 只返回已審核的留言給前端顯示
-        if (messageData.approved === 'approved') {
-          messages.push(messageData)
+        // 如果沒有審核狀態，設為 pending
+        if (!messageData.approved) {
+          messageData.approved = 'pending'
         }
+        
+        // 轉換時間戳
+        if (messageData.timestamp && typeof messageData.timestamp === 'string') {
+          messageData.timestamp = new Date(messageData.timestamp).getTime()
+        }
+        
+        messages.push(messageData)
       } catch (error) {
         console.warn(`無法讀取訊息檔案 ${file.name}:`, error)
       }
     }
     
-    // 按時間戳排序（如果有的話）
+    // 按時間戳排序（最新的在前）
     messages.sort((a, b) => {
       const timeA = a.timestamp || 0
       const timeB = b.timestamp || 0
       return timeB - timeA
     })
     
-    console.log(`載入了 ${messages.length} 則訊息`)
+    console.log(`管理員載入了 ${messages.length} 則訊息`)
     
     return {
       success: true,
       messages,
-      total: messages.length
+      total: messages.length,
+      stats: {
+        total: messages.length,
+        approved: messages.filter(m => m.approved === 'approved').length,
+        pending: messages.filter(m => m.approved === 'pending').length,
+        rejected: messages.filter(m => m.approved === 'rejected').length,
+        withPhoto: messages.filter(m => m.photo).length
+      }
     }
     
   } catch (error: any) {
-    console.error('載入訊息失敗:', error)
+    console.error('管理員載入訊息失敗:', error)
     
     return {
       success: false,
       error: error.message || '載入訊息失敗',
       messages: [],
-      total: 0
+      total: 0,
+      stats: {
+        total: 0,
+        approved: 0,
+        pending: 0,
+        rejected: 0,
+        withPhoto: 0
+      }
     }
   }
 })

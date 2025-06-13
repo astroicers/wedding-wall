@@ -56,6 +56,22 @@
         </el-col>
       </el-row>
       
+      <!-- 管理功能區域 -->
+      <el-row :gutter="16" justify="center" style="margin-top: 20px;">
+        <el-col :span="8">
+          <el-card shadow="hover" class="nav-card admin-card" @click="navigateTo('/admin')">
+            <div class="nav-content">
+              <el-icon size="32" class="nav-icon">
+                <Tools />
+              </el-icon>
+              <h3>管理控制台</h3>
+              <p>管理留言與設定</p>
+              <el-tag type="info" size="small" class="admin-tag">ADMIN</el-tag>
+            </div>
+          </el-card>
+        </el-col>
+      </el-row>
+      
       <!-- 風格快捷按鈕 -->
       <div class="quick-styles">
         <el-divider>
@@ -107,20 +123,8 @@
       </div>
     </div>
 
-    <!-- 背景圖片設定區域 -->
-    <div class="background-section">
-      <BackgroundUpload />
-    </div>
 
-    <!-- 祝福牆設定區域 -->
-    <div class="settings-section">
-      <WallSettings />
-    </div>
     
-    <!-- 祝福牆標題設定區域 -->
-    <div class="title-settings-section">
-      <WallTitleSettings />
-    </div>
 
     <!-- 認證登入區域 -->
     <div class="auth-section">
@@ -164,14 +168,12 @@
         </el-col>
       </el-row>
     </div>
+    
   </div>
 </template>
 
 <script setup lang="ts">
-import BackgroundUpload from '~/components/BackgroundUpload.vue'
-import WallSettings from '~/components/WallSettings.vue'
-import WallTitleSettings from '~/components/WallTitleSettings.vue'
-import { Picture, Upload, ChatDotRound, Star, MagicStick, VideoCamera, Document } from '@element-plus/icons-vue'
+import { Picture, Upload, ChatDotRound, Star, MagicStick, VideoCamera, Document, Tools } from '@element-plus/icons-vue'
 
 // 使用 Pinia Stores
 const backgroundStore = useBackgroundStore()
@@ -378,15 +380,7 @@ onMounted(() => {
   font-size: 0.9rem;
 }
 
-/* 背景設定區域 */
-.background-section {
-  margin-bottom: 2rem;
-}
 
-/* 祝福牆設定區域 */
-.settings-section {
-  margin-bottom: 2rem;
-}
 
 /* 認證區域 */
 .auth-section {
@@ -515,5 +509,47 @@ onMounted(() => {
     font-size: 0.75rem;
     padding: 6px 4px;
   }
+}
+
+/* 管理員卡片 */
+.admin-card {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  position: relative;
+  overflow: hidden;
+}
+
+.admin-card::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
+  transform: rotate(45deg);
+  animation: shimmer 3s infinite;
+}
+
+.admin-card .nav-icon {
+  color: #FFD700;
+}
+
+.admin-card .nav-content h3 {
+  color: white;
+}
+
+.admin-card .nav-content p {
+  color: rgba(255,255,255,0.9);
+}
+
+.admin-tag {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 2;
+  background: rgba(255, 255, 255, 0.2) !important;
+  color: white !important;
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
 }
 </style>
