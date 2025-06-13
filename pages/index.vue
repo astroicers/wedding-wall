@@ -87,6 +87,9 @@ import AuthPanel from '~/components/AuthPanel.vue'
 import BackgroundUpload from '~/components/BackgroundUpload.vue'
 import { Picture, Upload, ChatDotRound, Star } from '@element-plus/icons-vue'
 
+// 載入背景圖片（用於背景設定功能，但不應用到首頁）
+const { loadBackground } = useBackgroundStore()
+
 // 定義 PhotoIcon 組件
 const PhotoIcon = {
   name: 'PhotoIcon',
@@ -110,6 +113,11 @@ useHead({
   meta: [
     { name: 'description', content: '歡迎來到婚禮祝福牆，上傳照片和留言祝福，與新人分享這個特別的時刻！' }
   ]
+})
+
+// 載入背景圖片
+onMounted(() => {
+  loadBackground()
 })
 </script>
 

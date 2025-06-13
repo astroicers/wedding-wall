@@ -11,8 +11,10 @@
   },
   "dependencies": {
     "@element-plus/nuxt": "^1.1.2",
+    "@types/jszip": "^3.4.0",
     "element-plus": "^2.9.11",
     "formidable": "^3.5.4",
+    "jszip": "^3.10.1",
     "minio": "^8.0.5",
     "nuxt": "^3.17.4",
     "vue": "^3.5.15",

@@ -10,6 +10,19 @@
         <div class="stats" v-if="imageList.length > 0">
           <span>共 {{ imageList.length }} 張照片</span>
         </div>
+        <div class="actions" v-if="imageList.length > 0">
+          <el-button 
+            type="primary" 
+            :loading="downloading" 
+            @click="downloadAllPhotos"
+            :disabled="downloading"
+          >
+            <el-icon v-if="!downloading">
+              <Download />
+            </el-icon>
+            {{ downloading ? '準備下載中...' : '下載所有照片 (ZIP)' }}
+          </el-button>
+        </div>
       </div>
     </div>
     
@@ -47,12 +60,13 @@
 </template>
   
   <script setup lang="ts">
-  import { Picture } from '@element-plus/icons-vue'
+  import { Picture, Download } from '@element-plus/icons-vue'
   
   const imageList = ref<string[]>([])
   const previewVisible = ref(false)
   const selectedImage = ref('')
   const loading = ref(false)
+  const downloading = ref(false)
   const { fetchMessages } = useApi()
 
   // 設定頁面 meta
@@ -78,6 +92,48 @@
     } catch (error) {
       ElMessage.error('下載失敗')
       console.error('下載錯誤:', error)
+    }
+  }
+
+  async function downloadAllPhotos() {
+    if (downloading.value) return
+    
+    downloading.value = true
+    try {
+      ElMessage.info('正在準備下載所有照片，請稍候...')
+      
+      const response = await fetch('/api/download-all', {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/zip'
+        }
+      })
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      
+      // 獲取檔案內容
+      const blob = await response.blob()
+      
+      // 創建下載連結
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `wedding-photos-${new Date().toISOString().split('T')[0]}.zip`
+      document.body.appendChild(a)
+      a.click()
+      
+      // 清理
+      document.body.removeChild(a)
+      window.URL.revokeObjectURL(url)
+      
+      ElMessage.success(`成功下載 ${imageList.value.length} 張照片！`)
+    } catch (error) {
+      console.error('批量下載失敗:', error)
+      ElMessage.error('下載失敗，請稍後再試')
+    } finally {
+      downloading.value = false
     }
   }
   
@@ -138,6 +194,31 @@
     display: inline-block;
     font-weight: 500;
     font-size: 0.9rem;
+    margin-bottom: 1rem;
+  }
+
+  .actions {
+    margin-top: 1rem;
+  }
+
+  .actions .el-button {
+    background: linear-gradient(135deg, #67C23A 0%, #85CE61 100%);
+    border: none;
+    padding: 0.75rem 1.5rem;
+    font-weight: 600;
+    border-radius: 25px;
+    box-shadow: 0 4px 12px rgba(103, 194, 58, 0.3);
+    transition: all 0.3s ease;
+  }
+
+  .actions .el-button:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(103, 194, 58, 0.4);
+  }
+
+  .actions .el-button:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
   }
 
   .gallery-content {
