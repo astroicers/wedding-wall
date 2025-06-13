@@ -1,7 +1,8 @@
 import { Client } from 'minio'
 
 const createMinioClient = () => {
-  const config = {
+  // 對於容器環境，使用內部 endpoint 進行操作
+  const internalConfig = {
     endPoint: process.env.MINIO_ENDPOINT || 'localhost',
     port: parseInt(process.env.MINIO_PORT || '9000'),
     useSSL: process.env.MINIO_USE_SSL === 'true',
@@ -10,13 +11,13 @@ const createMinioClient = () => {
   }
   
   console.log('MinIO Client Config:', {
-    endPoint: config.endPoint,
-    port: config.port,
-    useSSL: config.useSSL,
-    accessKey: config.accessKey
+    endPoint: internalConfig.endPoint,
+    port: internalConfig.port,
+    useSSL: internalConfig.useSSL,
+    accessKey: internalConfig.accessKey
   })
   
-  return new Client(config)
+  return new Client(internalConfig)
 }
 
 export const MinioClient = createMinioClient()
@@ -95,15 +96,9 @@ export const MinioService = {
   },
 
   async getPresignedUrl(bucketName: string, objectName: string, expiry: number = 7 * 24 * 60 * 60) {
-    const url = await MinioClient.presignedGetObject(bucketName, objectName, expiry)
-    // 將容器內的 minio 主機名替換為 localhost，供瀏覽器訪問
-    let finalUrl = url.replace('minio:9000', 'localhost:9000')
-    
-    // 加入快取破壞參數來解決 Chromium 瀏覽器快取問題
-    const separator = finalUrl.includes('?') ? '&' : '?'
+    // 不使用 MinIO presigned URL，而是通過我們的 API 代理來提供圖片
+    // 這樣避免了 hostname 替換導致的簽名問題
     const cacheBuster = `cb=${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-    finalUrl += `${separator}${cacheBuster}`
-    
-    return finalUrl
+    return `/api/background-image/${objectName}?${cacheBuster}`
   }
 }

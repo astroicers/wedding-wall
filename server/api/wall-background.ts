@@ -28,6 +28,9 @@ async function handleGet() {
   try {
     const bucketName = 'wedding-background'
     
+    // 確保 bucket 存在
+    await MinioService.ensureBucket(bucketName)
+    
     // 尋找最新的背景圖片（按檔名中的時間戳排序）
     try {
       const objects = await MinioService.listObjects(bucketName, 'background-')
@@ -76,6 +79,9 @@ async function handlePost(event: any) {
   try {
     const bucketName = 'wedding-background'
     
+    // 確保 bucket 存在（在檢查現有對象之前）
+    await MinioService.ensureBucket(bucketName)
+    
     // 檢查是否已有背景圖片
     const existingObjects = await MinioService.listObjects(bucketName, 'background-')
     if (existingObjects.length > 0) {
@@ -109,9 +115,6 @@ async function handlePost(event: any) {
         statusMessage: '僅支援 JPG、PNG、WebP 格式的圖片'
       })
     }
-
-    // 確保 bucket 存在
-    await MinioService.ensureBucket(bucketName)
 
     // 讀取檔案內容
     const fileBuffer = readFileSync(backgroundFile.filepath)
@@ -147,6 +150,9 @@ async function handlePost(event: any) {
 async function handleDelete() {
   try {
     const bucketName = 'wedding-background'
+    
+    // 確保 bucket 存在
+    await MinioService.ensureBucket(bucketName)
     
     // 刪除所有背景圖片
     try {

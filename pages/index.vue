@@ -87,8 +87,9 @@ import AuthPanel from '~/components/AuthPanel.vue'
 import BackgroundUpload from '~/components/BackgroundUpload.vue'
 import { Picture, Upload, ChatDotRound, Star } from '@element-plus/icons-vue'
 
-// 載入背景圖片（用於背景設定功能，但不應用到首頁）
-const { loadBackground } = useBackgroundStore()
+// 使用 Pinia Stores
+const backgroundStore = useBackgroundStore()
+const uiStore = useUIStore()
 
 // 定義 PhotoIcon 組件
 const PhotoIcon = {
@@ -115,18 +116,19 @@ useHead({
   ]
 })
 
-// 載入背景圖片
+// 初始化頁面
 onMounted(() => {
+  // 設定當前頁面
+  uiStore.setCurrentPage('home')
+  
   // 強制從 MinIO 重新取得背景圖，確保與伺服器狀態同步
-  loadBackground(true)
-})
-
-// 監聽頁面顯示事件（從其他頁面返回時重新載入）
-onMounted(() => {
+  backgroundStore.loadBackground(true)
+  
+  // 監聽頁面顯示事件（從其他頁面返回時重新載入）
   const handleVisibilityChange = () => {
     if (!document.hidden) {
       // 頁面重新顯示時強制重新載入背景
-      loadBackground(true)
+      backgroundStore.loadBackground(true)
     }
   }
   
@@ -134,7 +136,7 @@ onMounted(() => {
   
   // 監聽頁面焦點事件
   const handleFocus = () => {
-    loadBackground(true)
+    backgroundStore.loadBackground(true)
   }
   
   window.addEventListener('focus', handleFocus)

@@ -8,58 +8,78 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Build**: `npm run build` - Builds the application for production
 - **Preview**: `npm run preview` - Preview production build locally
 - **Generate**: `npm run generate` - Generate static site
+- **Docker full stack**: `docker-compose up --build` - Starts entire application with MinIO
 
 ## Architecture Overview
 
-This is a Nuxt 3 wedding photo wall application that uses MinIO for object storage and Element Plus for UI components.
+This is a Nuxt 3 wedding photo wall application using MinIO for object storage, Pinia for state management, and Element Plus for UI components.
 
-### Key Components
+### Technology Stack
 
-- **Server API**: Handles file uploads and metadata storage in `/server/api/`
-- **MinIO Integration**: Images and metadata stored in MinIO bucket `wedding-wall`
-- **Real-time Wall**: Auto-rotating message display on `/wall` page
-- **Photo Gallery**: Browsable gallery with vue3-photo-preview lightbox
+- **Frontend**: Nuxt 3 + Vue 3 + TypeScript + Element Plus
+- **State Management**: Pinia with persistence (localStorage/sessionStorage)
+- **Storage**: MinIO S3-compatible object storage
+- **File Processing**: Formidable for server-side uploads, JSZip for bulk downloads
+- **Image Display**: vue3-photo-preview for lightbox functionality
+
+### Pinia State Architecture
+
+The application uses 5 main Pinia stores for centralized state management:
+
+- **Background Store** (`stores/background.ts`): Manages wall background images with cache-busting
+- **Messages Store** (`stores/messages.ts`): Handles blessing messages and metadata
+- **Auth Store** (`stores/auth.ts`): User authentication with session management
+- **Upload Store** (`stores/upload.ts`): File upload state and history tracking
+- **UI Store** (`stores/ui.ts`): Global UI state, notifications, and device detection
+
+### Critical Cache Management
+
+The Background Store implements sophisticated cache-busting to solve Chromium browser caching issues:
+- `cachedBackgroundUrl` getter automatically appends unique timestamps
+- `cacheVersion` increments on every state change
+- Manual DOM image cache clearing for complete refresh
+
+### MinIO Storage Architecture
+
+Two separate buckets handle different data types:
+- **`wedding-wall`**: Main bucket for uploaded photos and message metadata
+- **`wedding-background`**: Dedicated bucket for wall background images
 
 ### Data Flow
 
-1. Users upload photos + messages via `/upload` page
-2. Files stored as `wedding-wall/{timestamp}-{filename}.jpg` in MinIO
-3. Metadata stored as JSON files in `wedding-wall/metadata/{timestamp}-{uuid}.json`
-4. Wall page (`/wall`) fetches metadata and rotates messages every 3 seconds
-5. Gallery page (`/gallery`) displays all photos with lightbox functionality
+1. Users upload photos + messages via homepage forms
+2. Files stored as `{timestamp}-{filename}` in MinIO with metadata JSON
+3. Background images stored as `background-{timestamp}.{ext}` in separate bucket
+4. Wall page fetches data via Pinia stores with automatic caching
+5. Images served through `/api/image/[name]` with proper cache headers
 
-### Storage Structure
+### API Structure
 
-- Images: Direct file uploads to MinIO root
-- Metadata: JSON files in `metadata/` subfolder containing `{name, text, photo}` objects
-- Image serving: Dynamic route `/api/image/[name]` streams from MinIO
+Key server endpoints in `/server/api/`:
+- `messages.get.ts`: Fetches all blessing messages with image path normalization
+- `wall-background.ts`: Handles background CRUD with conflict prevention
+- `upload.post.ts`: Processes photo uploads with metadata generation
+- `image/[name].ts`: Streams images from MinIO with cache optimization
 
-## MinIO Setup
+### Docker Deployment
 
-For local development, run MinIO in Docker:
+Complete containerized setup via `docker-compose.yml`:
+- MinIO service on ports 9000 (API) and 9001 (Console)
+- Nuxt application service on port 3000
+- Persistent volume for MinIO data
+- Environment-based configuration for container networking
 
-```bash
-docker run -p 9000:9000 -p 9001:9001 \
-  -e "MINIO_ROOT_USER=admin" \
-  -e "MINIO_ROOT_PASSWORD=admin123" \
-  -v $(pwd)/minio-data:/data \
-  quay.io/minio/minio server /data --console-address ":9001"
-```
+### Environment Configuration
 
-Create a `wedding-wall` bucket via MinIO Console at <http://localhost:9001>
+Container environment variables for MinIO integration:
+- `MINIO_ENDPOINT`: Service endpoint (localhost for dev, minio for containers)
+- `MINIO_ACCESS_KEY`/`MINIO_SECRET_KEY`: Authentication credentials
+- `MINIO_BUCKET_NAME`: Primary bucket identifier
 
-## Key Composables
+### Browser Cache Resolution
 
-- `useMessages.ts`: Fetches and manages message metadata with error handling
-- `useAuth.ts`: Simple authentication state management
-- `useMinio.ts`: Client-side MinIO utilities for file validation and preview
-- `useApi.ts`: Centralized API request handling with error management
-
-## Recent Optimizations
-
-- **Code Reusability**: Eliminated duplicate API calls and error handling
-- **File Validation**: Client-side file type and size validation before upload
-- **Error Handling**: Unified error messages using Element Plus notifications
-- **User Experience**: Added loading states, file previews, and better feedback
-- **Security**: Path traversal protection and file type restrictions
-- **Performance**: Image caching and optimized error recovery
+Implemented multi-layer cache-busting for Chromium browsers:
+1. Server-level: No-cache headers on background API endpoints
+2. URL-level: Unique timestamps in MinIO presigned URLs
+3. State-level: Pinia cache versioning system
+4. DOM-level: Manual image element cache clearing

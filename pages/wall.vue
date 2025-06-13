@@ -32,8 +32,14 @@
   import { ArrowLeft, Picture } from '@element-plus/icons-vue'
   
   const current = ref(0)
-  const { messages, loadMessages } = useMessages()
-  const { getBackgroundUrl, loadBackground } = useBackgroundStore()
+  
+  // 使用 Pinia Stores
+  const messagesStore = useMessagesStore()
+  const backgroundStore = useBackgroundStore()
+  const uiStore = useUIStore()
+  
+  // 響應式資料
+  const messages = computed(() => messagesStore.messages)
 
   // 設定頁面 meta
   useHead({
@@ -43,9 +49,9 @@
     ]
   })
 
-  // 計算背景樣式
+  // 計算背景樣式，使用 Pinia store 的快取安全 URL
   const backgroundStyle = computed(() => {
-    const bgUrl = getBackgroundUrl()
+    const bgUrl = backgroundStore.cachedBackgroundUrl
     if (bgUrl) {
       return {
         backgroundImage: `url(${bgUrl})`,
@@ -59,10 +65,13 @@
 
   
   onMounted(async () => {
-    // 載入訊息和背景圖片
+    // 設定當前頁面
+    uiStore.setCurrentPage('wall')
+    
+    // 使用 Pinia stores 載入資料
     await Promise.all([
-      loadMessages(),
-      loadBackground()
+      messagesStore.fetchMessages(),
+      backgroundStore.loadBackground(true)
     ])
   
     // 每3秒切換到下一則訊息
@@ -74,19 +83,19 @@
   
     // 每5秒重新載入訊息（背景載入，不顯示錯誤）
     setInterval(() => {
-      loadMessages(false)
+      messagesStore.fetchMessages(false)
     }, 5000)
     
-    // 每30秒重新檢查背景圖片是否有更新（減少頻率避免閃爍）
+    // 每30秒重新檢查背景圖片是否有更新
     setInterval(() => {
-      loadBackground()
+      backgroundStore.loadBackground()
     }, 30000)
     
     // 監聽背景更新訊息
     const handleBackgroundUpdate = (event: MessageEvent) => {
       if (event.data && event.data.type === 'BACKGROUND_UPDATED') {
         // 強制重新載入背景
-        loadBackground(true)
+        backgroundStore.loadBackground(true)
       }
     }
     

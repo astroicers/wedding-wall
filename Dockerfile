@@ -5,8 +5,8 @@ WORKDIR /app
 # 複製 package.json 檔案
 COPY package*.json ./
 
-# 安裝依賴
-RUN npm ci --only=production && npm cache clean --force
+# 安裝依賴，使用 legacy-peer-deps 解決 Pinia 插件版本衝突
+RUN npm ci --legacy-peer-deps && npm cache clean --force
 
 # 複製專案檔案
 COPY . .

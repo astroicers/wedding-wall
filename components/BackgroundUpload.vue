@@ -87,25 +87,24 @@ import { Picture, Upload } from '@element-plus/icons-vue'
 
 const selectedFile = ref<File | null>(null)
 const previewUrl = ref('')
-const uploading = ref(false)
-const removing = ref(false)
 
 const { formatFileSize } = useMinio()
-const { getBackgroundUrl, updateBackground, loadBackground } = useBackgroundStore()
 
-// 使用全局背景狀態，並加入強制重新載入機制
+// 使用 Pinia Stores
+const backgroundStore = useBackgroundStore()
+const uploadStore = useUploadStore()
+const uiStore = useUIStore()
+
+// 使用 Pinia 的背景狀態，自動解決快取問題
 const currentBackground = computed(() => {
-  const url = getBackgroundUrl()
-  // 為圖像 URL 加入強制重新載入參數，避免瀏覽器快取
-  if (url && url.trim()) {
-    const separator = url.includes('?') ? '&' : '?'
-    return `${url}${separator}reload=${Date.now()}`
-  }
+  const url = backgroundStore.cachedBackgroundUrl
+  console.log('當前背景 URL:', url)
+  console.log('原始背景 URL:', backgroundStore.backgroundUrl)
+  console.log('快取版本:', backgroundStore.cacheVersion)
   return url
 })
-
-// 載入當前背景 - 使用全局狀態管理
-const loadCurrentBackground = () => loadBackground()
+const uploading = computed(() => uploadStore.isUploading)
+const removing = computed(() => backgroundStore.isLoading)
 
 const onFileChange = async (uploadFile: any) => {
   const file = uploadFile.raw
@@ -145,110 +144,59 @@ const cancelUpload = () => {
 const uploadBackground = async () => {
   if (!selectedFile.value) return
   
-  uploading.value = true
-  
   try {
-    const formData = new FormData()
-    formData.append('background', selectedFile.value)
+    // 使用 Pinia Upload Store 管理上傳狀態
+    uploadStore.startUpload('background')
     
-    const response = await fetch('/api/wall-background', {
-      method: 'POST',
-      body: formData
-    })
+    // 使用 Background Store 的上傳方法
+    await backgroundStore.uploadBackground(selectedFile.value)
     
-    if (response.ok) {
-      const data = await response.json()
-      console.log('背景上傳成功:', data)
-      
-      // 更新全局背景狀態
-      updateBackground(data.backgroundUrl)
-      
-      ElMessage.success('背景設定成功！')
-      onFileRemove()
-      
-      // 通知其他頁面背景已更新
-      if (window.parent) {
-        window.parent.postMessage({ type: 'BACKGROUND_UPDATED' }, '*')
-      }
-      
-      // 確保 UI 狀態同步
-      await nextTick()
-    } else {
-      const errorData = await response.json()
-      throw new Error(errorData.statusMessage || '上傳失敗')
-    }
-  } catch (error) {
-    ElMessage.error('上傳失敗，請重試')
+    // 記錄成功上傳
+    uploadStore.uploadSuccess(selectedFile.value.name)
+    
+    // 使用 UI Store 顯示成功通知
+    await uiStore.showNotification('背景設定成功！', 'success')
+    
+    // 清除選擇的檔案
+    onFileRemove()
+    
+    // 確保 UI 狀態同步
+    await nextTick()
+  } catch (error: any) {
+    // 記錄失敗上傳
+    uploadStore.uploadFailed(error.message || '上傳失敗', selectedFile.value?.name)
+    
+    // 使用 UI Store 顯示錯誤通知
+    await uiStore.showNotification('上傳失敗，請重試', 'error')
     console.error('上傳錯誤:', error)
-  } finally {
-    uploading.value = false
   }
 }
 
 const removeBackground = async () => {
-  removing.value = true
-  
   try {
-    const response = await fetch('/api/wall-background', {
-      method: 'DELETE'
-    })
+    // 使用 Background Store 的移除方法，自動處理快取清除
+    await backgroundStore.removeBackground()
     
-    if (response.ok) {
-      const data = await response.json()
-      console.log('背景移除完成:', data)
-      
-      // 強制清除全局背景狀態
-      updateBackground('')
-      
-      // 強制重新載入背景狀態
-      await loadBackground(true)
-      
-      // 強制清除瀏覽器圖像快取
-      const imgElements = document.querySelectorAll('img[src*="wedding-background"]')
-      imgElements.forEach(img => {
-        const imgEl = img as HTMLImageElement
-        const currentSrc = imgEl.src
-        imgEl.src = ''
-        setTimeout(() => {
-          imgEl.src = currentSrc + (currentSrc.includes('?') ? '&' : '?') + 'nocache=' + Date.now()
-        }, 10)
-      })
-      
-      ElMessage.success('背景已移除，現在可以上傳新背景了')
-      
-      // 刷新頁面狀態，確保 UI 更新
-      await nextTick()
-    } else {
-      throw new Error('移除失敗')
-    }
-  } catch (error) {
-    ElMessage.error('移除失敗，請重試')
+    // 使用 UI Store 顯示成功通知
+    await uiStore.showNotification('背景已移除，現在可以上傳新背景了', 'success')
+    
+    // 確保 UI 狀態同步
+    await nextTick()
+  } catch (error: any) {
+    // 使用 UI Store 顯示錯誤通知
+    await uiStore.showNotification('移除失敗，請重試', 'error')
     console.error('移除錯誤:', error)
-  } finally {
-    removing.value = false
   }
 }
 
 onMounted(() => {
-  // 強制從 MinIO 重新載入背景狀態，避免顯示快取的預覽圖
-  loadBackground(true)
-  
-  // 監聽頁面重新整理事件（beforeunload）
-  const handleBeforeUnload = () => {
-    // 清除所有背景圖像的快取
-    const imgElements = document.querySelectorAll('img[src*="wedding-background"], img[src*="background-"]')
-    imgElements.forEach(img => {
-      const imgEl = img as HTMLImageElement
-      imgEl.src = ''
-    })
-  }
-  
-  window.addEventListener('beforeunload', handleBeforeUnload)
+  // 使用 Pinia Background Store 載入背景狀態
+  backgroundStore.loadBackground(true)
   
   // 頁面可見性變化時重新載入
   const handleVisibilityChange = () => {
     if (!document.hidden) {
-      loadBackground(true)
+      backgroundStore.loadBackground(true)
     }
   }
   
@@ -256,7 +204,6 @@ onMounted(() => {
   
   // 清理事件監聽器
   onUnmounted(() => {
-    window.removeEventListener('beforeunload', handleBeforeUnload)
     document.removeEventListener('visibilitychange', handleVisibilityChange)
   })
 })
