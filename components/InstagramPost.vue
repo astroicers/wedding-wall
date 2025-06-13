@@ -35,9 +35,11 @@
           <!-- 左側互動按鈕 -->
           <div class="post-actions">
             <div class="action-buttons">
-              <el-icon class="action-icon love" size="20">
-                <Star />
-              </el-icon>
+              <div class="heart-icon love" @click="handleLike">
+                <svg viewBox="0 0 24 24" width="20" height="20">
+                  <path fill="currentColor" d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                </svg>
+              </div>
               <el-icon class="action-icon" size="20">
                 <ChatRound />
               </el-icon>
@@ -59,16 +61,16 @@
       
       <!-- 愛心動畫 -->
       <div class="heart-animation" ref="heartAnimation">
-        <el-icon size="60">
-          <Star />
-        </el-icon>
+        <svg viewBox="0 0 24 24" width="60" height="60">
+          <path fill="currentColor" d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+        </svg>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { User, Star, ChatRound, Share } from '@element-plus/icons-vue'
+import { User, ChatRound, Share } from '@element-plus/icons-vue'
 
 const props = defineProps<{ 
   message: { 
@@ -79,6 +81,7 @@ const props = defineProps<{
 }>()
 
 const heartAnimation = ref(null)
+const liked = ref(false)
 
 // 隨機讚數
 const randomLikes = computed(() => {
@@ -89,8 +92,14 @@ const randomLikes = computed(() => {
   return Math.abs(hash % 100) + 10
 })
 
+// 愛心點擊事件
+const handleLike = () => {
+  liked.value = !liked.value
+}
+
 // 雙擊愛心動畫
 const handleDoubleClick = () => {
+  liked.value = true
   if (heartAnimation.value) {
     const heart = heartAnimation.value as HTMLElement
     heart.classList.remove('animate')
@@ -283,7 +292,22 @@ onMounted(() => {
   color: #ff6b6b;
 }
 
-.action-icon.love {
+.heart-icon {
+  color: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.heart-icon:hover {
+  transform: scale(1.2);
+  color: #ff6b6b;
+}
+
+.heart-icon.love {
   color: #ff6b6b;
   animation: heartbeat 2s infinite;
 }
