@@ -40,7 +40,8 @@ export const useApi = () => {
   }
 
   const fetchMessages = async (): Promise<MessageData[]> => {
-    return apiRequest<MessageData[]>('/api/metadata')
+    const response = await apiRequest<{ success: boolean; messages: MessageData[]; total: number }>('/api/messages')
+    return response.messages || []
   }
 
   const uploadMessage = async (formData: FormData): Promise<UploadResult> => {
