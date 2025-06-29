@@ -20,14 +20,17 @@ services:
     build: .
     container_name: wedding-wall-app
     ports:
-      - "3000:3000"
+      - "8080:3000"
     environment:
+      NUXT_HOST: 0.0.0.0
       MINIO_ENDPOINT: minio
       MINIO_PORT: 9000
       MINIO_USE_SSL: false
-      MINIO_ACCESS_KEY: admin
-      MINIO_SECRET_KEY: admin123
-      MINIO_BUCKET_NAME: wedding-wall
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-admin}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-admin123}
+      MINIO_BUCKET_NAME: ${MINIO_BUCKET_NAME:-wedding-wall}
+      WEDDING_WALL_PASSWORD: ${WEDDING_WALL_PASSWORD:-wedding2024}
+      NUXT_PUBLIC_SITE_URL: ${NUXT_PUBLIC_SITE_URL:-http://192.168.96.83:8080}
     depends_on:
       - minio
     networks:

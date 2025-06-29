@@ -1,0 +1,94 @@
+version: '3.8'
+
+services:
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: wedding-wall-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+      - nginx_cache:/var/cache/nginx
+    depends_on:
+      - wedding-wall
+    networks:
+      - wedding-wall-network
+    restart: unless-stopped
+
+  # MinIO Storage
+  minio:
+    image: quay.io/minio/minio
+    container_name: wedding-wall-minio
+    ports:
+      - "127.0.0.1:9000:9000"
+      - "127.0.0.1:9001:9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-admin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-changeme123!}
+      MINIO_BROWSER: "off"  # Disable MinIO console for security
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ":9001"
+    networks:
+      - wedding-wall-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
+  # Wedding Wall Application
+  wedding-wall:
+    build:
+      context: .
+      dockerfile: Dockerfile.production
+    container_name: wedding-wall-app
+    expose:
+      - "3000"
+    environment:
+      # App Settings
+      NODE_ENV: production
+      NITRO_HOST: 0.0.0.0
+      NITRO_PORT: 3000
+      
+      # MinIO Settings
+      MINIO_ENDPOINT: minio
+      MINIO_PORT: 9000
+      MINIO_USE_SSL: false
+      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:-admin}
+      MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-changeme123!}
+      MINIO_BUCKET_NAME: wedding-wall
+      
+      # Security Settings
+      WEDDING_WALL_PASSWORD: ${WEDDING_WALL_PASSWORD:-wedding2024}
+      SESSION_SECRET: ${SESSION_SECRET:-your-secret-key-here}
+      
+      # Optional: External URL
+      NUXT_PUBLIC_SITE_URL: ${SITE_URL:-http://localhost}
+    depends_on:
+      - minio
+    networks:
+      - wedding-wall-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  minio_data:
+    driver: local
+  nginx_cache:
+    driver: local
+
+networks:
+  wedding-wall-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

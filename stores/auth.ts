@@ -3,6 +3,7 @@ export interface AuthState {
   isAuthenticated: boolean
   loginTime: number | null
   sessionExpiry: number | null
+  isPasswordProtected: boolean
 }
 
 export const useAuthStore = defineStore('auth', {
@@ -10,7 +11,8 @@ export const useAuthStore = defineStore('auth', {
     user: null,
     isAuthenticated: false,
     loginTime: null,
-    sessionExpiry: null
+    sessionExpiry: null,
+    isPasswordProtected: false
   }),
 
   getters: {
@@ -25,8 +27,8 @@ export const useAuthStore = defineStore('auth', {
       return Math.max(0, remaining)
     },
 
-    timeRemainingMinutes: (state) => {
-      return Math.floor(state.timeRemaining / (1000 * 60))
+    timeRemainingMinutes(): number {
+      return Math.floor(this.timeRemaining / (1000 * 60))
     }
   },
 
@@ -40,6 +42,17 @@ export const useAuthStore = defineStore('auth', {
       this.sessionExpiry = Date.now() + (30 * 60 * 1000)
       
       console.log('用戶登入成功:', username)
+    },
+
+    // 設定已認證狀態（用於密碼保護）
+    setAuthenticated(value: boolean) {
+      this.isAuthenticated = value
+      this.isPasswordProtected = value
+      if (value) {
+        this.loginTime = Date.now()
+        // 設定 3 小時後過期（適合婚禮活動）
+        this.sessionExpiry = Date.now() + (3 * 60 * 60 * 1000)
+      }
     },
 
     // 登出
