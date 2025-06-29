@@ -75,6 +75,8 @@ function getDefaultSettings() {
     wallTitle: '婚禮祝福牆',
     wallSubtitle: '',
     titleColor: '#2c3e50',
+    fontFamily: 'system-ui, -apple-system, sans-serif',
+    fontSize: 48,
     autoplayDelay: 3,
     imageDelay: 1,
     

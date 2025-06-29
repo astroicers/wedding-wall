@@ -38,13 +38,60 @@
                 @change="updateTitle"
               />
             </el-form-item>
+            
+            <el-form-item label="字體類型">
+              <el-select 
+                v-model="fontFamily" 
+                placeholder="選擇字體"
+                @change="handleFontChange"
+              >
+                <el-option-group label="系統字體">
+                  <el-option label="默認字體" value="system-ui, -apple-system, sans-serif" />
+                  <el-option label="微軟正黑體" value="Microsoft JhengHei, sans-serif" />
+                  <el-option label="標楷體" value="DFKai-SB, serif" />
+                  <el-option label="新細明體" value="PMingLiU, serif" />
+                  <el-option label="Arial" value="Arial, sans-serif" />
+                  <el-option label="Times New Roman" value="Times New Roman, serif" />
+                  <el-option label="Georgia" value="Georgia, serif" />
+                </el-option-group>
+                <el-option-group label="Google Fonts - 中文字體">
+                  <el-option label="思源黑體" value="Noto Sans TC" />
+                  <el-option label="思源宋體" value="Noto Serif TC" />
+                  <el-option label="中文楷體" value="cwTeXKai" />
+                  <el-option label="中文圓體" value="cwTeXYen" />
+                  <el-option label="中文仿宋體" value="cwTeXFangSong" />
+                </el-option-group>
+              </el-select>
+            </el-form-item>
+            
+            <el-form-item label="字體大小">
+              <el-select 
+                v-model="fontSize" 
+                placeholder="選擇字體大小"
+                @change="updateTitle"
+              >
+                <el-option :label="`${size}px`" :value="size" v-for="size in fontSizeOptions" :key="size" />
+              </el-select>
+              <div style="margin-top: 5px; font-size: 12px; color: #909399;">
+                副標題字體大小會自動調整為主標題的 50%
+              </div>
+            </el-form-item>
           </el-form>
           
           <div class="preview-section">
             <div class="preview-label">預覽效果</div>
             <div class="preview-box">
-              <h2 :style="{ color: titleColor }">{{ wallTitle || '婚禮祝福牆' }}</h2>
-              <p v-if="wallSubtitle" :style="{ color: titleColor, opacity: 0.8 }">{{ wallSubtitle }}</p>
+              <h2 :style="{ 
+                color: titleColor, 
+                fontFamily: getFontFamilyWithFallback(fontFamily),
+                fontSize: fontSize + 'px'
+              }">{{ wallTitle || '婚禮祝福牆' }}</h2>
+              <p v-if="wallSubtitle" :style="{ 
+                color: titleColor, 
+                opacity: 0.8,
+                fontFamily: getFontFamilyWithFallback(fontFamily),
+                fontSize: (fontSize * 0.5) + 'px'
+              }">{{ wallSubtitle }}</p>
             </div>
           </div>
           
@@ -67,6 +114,11 @@ import { Edit, RefreshRight } from '@element-plus/icons-vue'
 const wallTitle = ref('婚禮祝福牆')
 const wallSubtitle = ref('')
 const titleColor = ref('#2c3e50')
+const fontFamily = ref('system-ui, -apple-system, sans-serif')
+const fontSize = ref(48)
+
+// 字體大小選項
+const fontSizeOptions = [20, 24, 28, 32, 36, 40, 44, 48, 52, 56, 60, 64, 72]
 
 // 從 localStorage 載入設定
 onMounted(() => {
@@ -81,6 +133,11 @@ const loadSettings = () => {
       wallTitle.value = parsed.wallTitle || '婚禮祝福牆'
       wallSubtitle.value = parsed.wallSubtitle || ''
       titleColor.value = parsed.titleColor || '#2c3e50'
+      fontFamily.value = parsed.fontFamily || 'system-ui, -apple-system, sans-serif'
+      fontSize.value = parsed.fontSize || 48
+      
+      // 載入 Google Font（如果需要）
+      loadGoogleFont(fontFamily.value)
     }
   } catch (error) {
     console.error('載入標題設定失敗:', error)
@@ -91,7 +148,9 @@ const updateTitle = () => {
   const settings = {
     wallTitle: wallTitle.value,
     wallSubtitle: wallSubtitle.value,
-    titleColor: titleColor.value
+    titleColor: titleColor.value,
+    fontFamily: fontFamily.value,
+    fontSize: fontSize.value
   }
   
   try {
@@ -103,10 +162,22 @@ const updateTitle = () => {
   }
 }
 
+// 使用 Google Fonts 工具
+const { isGoogleFont, getFontFamilyWithFallback, loadGoogleFont } = useGoogleFonts()
+
+// 處理字體變更
+const handleFontChange = (value: string) => {
+  fontFamily.value = value
+  loadGoogleFont(value)
+  updateTitle()
+}
+
 const resetToDefault = () => {
   wallTitle.value = '婚禮祝福牆'
   wallSubtitle.value = ''
   titleColor.value = '#2c3e50'
+  fontFamily.value = 'system-ui, -apple-system, sans-serif'
+  fontSize.value = 48
   updateTitle()
   ElMessage.success('已重置為默認標題')
 }

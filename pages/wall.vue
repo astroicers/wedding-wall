@@ -12,8 +12,16 @@
     
     <!-- 祝福牆標題 -->
     <div class="wall-header" v-if="messages.length > 0">
-      <h1 class="wall-title" :style="{ color: titleSettings.titleColor }">{{ titleSettings.wallTitle }}</h1>
-      <p class="wall-subtitle" v-if="titleSettings.wallSubtitle" :style="{ color: titleSettings.titleColor }">{{ titleSettings.wallSubtitle }}</p>
+      <h1 class="wall-title" :style="{ 
+        color: titleSettings.titleColor,
+        fontFamily: getFontFamilyWithFallback(titleSettings.fontFamily),
+        fontSize: titleSettings.fontSize + 'px'
+      }">{{ titleSettings.wallTitle }}</h1>
+      <p class="wall-subtitle" v-if="titleSettings.wallSubtitle" :style="{ 
+        color: titleSettings.titleColor,
+        fontFamily: getFontFamilyWithFallback(titleSettings.fontFamily),
+        fontSize: (titleSettings.fontSize * 0.5) + 'px'
+      }">{{ titleSettings.wallSubtitle }}</p>
     </div>
     
     <!-- 祝福牆內容 -->
@@ -55,7 +63,9 @@
   const titleSettings = ref({
     wallTitle: '婚禮祝福牆',
     wallSubtitle: '',
-    titleColor: '#ffffff'
+    titleColor: '#ffffff',
+    fontFamily: 'system-ui, -apple-system, sans-serif',
+    fontSize: 48
   })
   
   // 使用 Pinia Stores
@@ -89,12 +99,20 @@
   })
 
   
+  // 使用 Google Fonts 工具
+  const { isGoogleFont, getFontFamilyWithFallback, loadGoogleFont } = useGoogleFonts()
+
   // 載入標題設定
   const loadTitleSettings = () => {
     try {
       const settings = localStorage.getItem('wallTitleSettings')
       if (settings) {
         titleSettings.value = { ...titleSettings.value, ...JSON.parse(settings) }
+        
+        // 載入 Google Font（如果需要）
+        if (titleSettings.value.fontFamily) {
+          loadGoogleFont(titleSettings.value.fontFamily)
+        }
       }
     } catch (error) {
       console.error('載入標題設定失敗:', error)
@@ -142,6 +160,11 @@
     // 監聽標題更新
     const handleTitleUpdate = (event: CustomEvent) => {
       titleSettings.value = { ...titleSettings.value, ...event.detail }
+      
+      // 載入 Google Font（如果需要）
+      if (event.detail.fontFamily) {
+        loadGoogleFont(event.detail.fontFamily)
+      }
     }
     
     window.addEventListener('message', handleBackgroundUpdate)
@@ -224,7 +247,6 @@
   
   .wall-title {
     margin: 0;
-    font-size: 2.5rem;
     font-weight: bold;
     text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.4);
     letter-spacing: 2px;
@@ -232,7 +254,6 @@
   
   .wall-subtitle {
     margin: 0.5rem 0 0;
-    font-size: 1.2rem;
     opacity: 0.9;
     text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.4);
   }

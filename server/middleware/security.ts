@@ -22,9 +22,9 @@ export default defineEventHandler((event) => {
       'Content-Security-Policy': [
         "default-src 'self'",
         "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
-        "style-src 'self' 'unsafe-inline'",
+        "style-src 'self' 'unsafe-inline' fonts.googleapis.com",
         "img-src 'self' data: blob: *",
-        "font-src 'self' data:",
+        "font-src 'self' data: fonts.gstatic.com",
         "connect-src 'self' ws: wss:",
         "frame-ancestors 'self'",
         "base-uri 'self'",

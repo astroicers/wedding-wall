@@ -297,13 +297,59 @@
           <el-form-item label="標題顏色">
             <el-color-picker v-model="settings.titleColor" />
           </el-form-item>
+          
+          <el-form-item label="字體類型">
+            <el-select 
+              v-model="settings.fontFamily" 
+              placeholder="選擇字體"
+              @change="handleFontChange"
+            >
+              <el-option-group label="系統字體">
+                <el-option label="默認字體" value="system-ui, -apple-system, sans-serif" />
+                <el-option label="微軟正黑體" value="Microsoft JhengHei, sans-serif" />
+                <el-option label="標楷體" value="DFKai-SB, serif" />
+                <el-option label="新細明體" value="PMingLiU, serif" />
+                <el-option label="Arial" value="Arial, sans-serif" />
+                <el-option label="Times New Roman" value="Times New Roman, serif" />
+                <el-option label="Georgia" value="Georgia, serif" />
+              </el-option-group>
+              <el-option-group label="Google Fonts - 中文字體">
+                <el-option label="思源黑體" value="Noto Sans TC" />
+                <el-option label="思源宋體" value="Noto Serif TC" />
+                <el-option label="中文楷體" value="cwTeXKai" />
+                <el-option label="中文圓體" value="cwTeXYen" />
+                <el-option label="中文仿宋體" value="cwTeXFangSong" />
+              </el-option-group>
+            </el-select>
+          </el-form-item>
+          
+          <el-form-item label="字體大小">
+            <el-select 
+              v-model="settings.fontSize" 
+              placeholder="選擇字體大小"
+            >
+              <el-option :label="`${size}px`" :value="size" v-for="size in fontSizeOptions" :key="size" />
+            </el-select>
+            <div style="margin-top: 5px; font-size: 12px; color: #909399;">
+              副標題字體大小會自動調整為主標題的 50%
+            </div>
+          </el-form-item>
         </el-form>
         
         <div class="preview-section">
           <div class="preview-label">預覽效果</div>
           <div class="preview-box">
-            <h2 :style="{ color: settings.titleColor }">{{ settings.wallTitle || '婚禮祝福牆' }}</h2>
-            <p v-if="settings.wallSubtitle" :style="{ color: settings.titleColor, opacity: 0.8 }">{{ settings.wallSubtitle }}</p>
+            <h2 :style="{ 
+              color: settings.titleColor,
+              fontFamily: getFontFamilyWithFallback(settings.fontFamily),
+              fontSize: settings.fontSize + 'px'
+            }">{{ settings.wallTitle || '婚禮祝福牆' }}</h2>
+            <p v-if="settings.wallSubtitle" :style="{ 
+              color: settings.titleColor, 
+              opacity: 0.8,
+              fontFamily: getFontFamilyWithFallback(settings.fontFamily),
+              fontSize: (settings.fontSize * 0.5) + 'px'
+            }">{{ settings.wallSubtitle }}</p>
           </div>
         </div>
         
@@ -483,6 +529,8 @@ const settings = ref({
   wallTitle: '婚禮祝福牆',
   wallSubtitle: '',
   titleColor: '#2c3e50',
+  fontFamily: 'system-ui, -apple-system, sans-serif',
+  fontSize: 48,
   autoplayDelay: 3,
   imageDelay: 1,
   autoApprove: false,
@@ -631,7 +679,9 @@ const saveSettings = async () => {
       localStorage.setItem('wallTitleSettings', JSON.stringify({
         wallTitle: settings.value.wallTitle,
         wallSubtitle: settings.value.wallSubtitle,
-        titleColor: settings.value.titleColor
+        titleColor: settings.value.titleColor,
+        fontFamily: settings.value.fontFamily,
+        fontSize: settings.value.fontSize
       }))
       
       // 觸發設定更新事件
@@ -646,7 +696,9 @@ const saveSettings = async () => {
         detail: {
           wallTitle: settings.value.wallTitle,
           wallSubtitle: settings.value.wallSubtitle,
-          titleColor: settings.value.titleColor
+          titleColor: settings.value.titleColor,
+          fontFamily: settings.value.fontFamily,
+          fontSize: settings.value.fontSize
         }
       }))
       
@@ -683,7 +735,9 @@ const loadSettings = async () => {
       localStorage.setItem('wallTitleSettings', JSON.stringify({
         wallTitle: result.settings.wallTitle,
         wallSubtitle: result.settings.wallSubtitle,
-        titleColor: result.settings.titleColor
+        titleColor: result.settings.titleColor,
+        fontFamily: result.settings.fontFamily,
+        fontSize: result.settings.fontSize
       }))
     } else {
       // 伺服器載入失敗時，嘗試從 localStorage 載入
@@ -698,6 +752,8 @@ const loadSettings = async () => {
         settings.value.wallTitle = parsed.wallTitle || '婚禮祝福牆'
         settings.value.wallSubtitle = parsed.wallSubtitle || ''
         settings.value.titleColor = parsed.titleColor || '#2c3e50'
+        settings.value.fontFamily = parsed.fontFamily || 'system-ui, -apple-system, sans-serif'
+        settings.value.fontSize = parsed.fontSize || 48
       }
     }
   } catch (error) {
@@ -825,6 +881,18 @@ const handleSortChange = (column: any) => {
   }
 }
 
+// 字體大小選項
+const fontSizeOptions = [20, 24, 28, 32, 36, 40, 44, 48, 52, 56, 60, 64, 72]
+
+// 使用 Google Fonts 工具
+const { isGoogleFont, getFontFamilyWithFallback, loadGoogleFont } = useGoogleFonts()
+
+// 處理字體變更
+const handleFontChange = (value: string) => {
+  settings.value.fontFamily = value
+  loadGoogleFont(value)
+}
+
 // 頁面設定
 useHead({
   title: '管理員控制台 - 婚禮祝福牆',
@@ -838,6 +906,11 @@ onMounted(async () => {
   await loadSettings()
   await loadMessages()
   backgroundStore.loadBackground(true)
+  
+  // 載入 Google Font（如果需要）
+  if (settings.value.fontFamily) {
+    loadGoogleFont(settings.value.fontFamily)
+  }
 })
 </script>
 
