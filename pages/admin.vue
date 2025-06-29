@@ -206,7 +206,7 @@
         <h3>祝福牆背景設定</h3>
         <div class="background-upload-section">
           <div class="current-background" v-if="currentBackground">
-            <label class="form-label">目前背景：</label>
+            <div class="form-label">目前背景：</div>
             <div class="preview-container">
               <img :src="currentBackground" alt="目前背景" class="background-preview" :key="currentBackground" />
               <div class="preview-overlay">
@@ -319,6 +319,14 @@
                 <el-option label="中文楷體" value="cwTeXKai" />
                 <el-option label="中文圓體" value="cwTeXYen" />
                 <el-option label="中文仿宋體" value="cwTeXFangSong" />
+              </el-option-group>
+              <el-option-group v-if="customFonts.length > 0" label="自定義字體">
+                <el-option 
+                  v-for="font in customFonts" 
+                  :key="font.name"
+                  :label="font.displayName" 
+                  :value="font.name" 
+                />
               </el-option-group>
             </el-select>
           </el-form-item>
@@ -885,12 +893,12 @@ const handleSortChange = (column: any) => {
 const fontSizeOptions = [20, 24, 28, 32, 36, 40, 44, 48, 52, 56, 60, 64, 72]
 
 // 使用 Google Fonts 工具
-const { isGoogleFont, getFontFamilyWithFallback, loadGoogleFont } = useGoogleFonts()
+const { isGoogleFont, getFontFamilyWithFallback, loadFont, customFonts, loadCustomFontsList } = useGoogleFonts()
 
 // 處理字體變更
 const handleFontChange = (value: string) => {
   settings.value.fontFamily = value
-  loadGoogleFont(value)
+  loadFont(value)
 }
 
 // 頁面設定
@@ -903,13 +911,14 @@ useHead({
 
 // 初始化
 onMounted(async () => {
+  await loadCustomFontsList()
   await loadSettings()
   await loadMessages()
   backgroundStore.loadBackground(true)
   
-  // 載入 Google Font（如果需要）
+  // 載入字體（如果需要）
   if (settings.value.fontFamily) {
-    loadGoogleFont(settings.value.fontFamily)
+    loadFont(settings.value.fontFamily)
   }
 })
 </script>

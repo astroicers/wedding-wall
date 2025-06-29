@@ -100,7 +100,7 @@
 
   
   // 使用 Google Fonts 工具
-  const { isGoogleFont, getFontFamilyWithFallback, loadGoogleFont } = useGoogleFonts()
+  const { isGoogleFont, getFontFamilyWithFallback, loadFont } = useGoogleFonts()
 
   // 載入標題設定
   const loadTitleSettings = () => {
@@ -109,9 +109,9 @@
       if (settings) {
         titleSettings.value = { ...titleSettings.value, ...JSON.parse(settings) }
         
-        // 載入 Google Font（如果需要）
+        // 載入字體（如果需要）
         if (titleSettings.value.fontFamily) {
-          loadGoogleFont(titleSettings.value.fontFamily)
+          loadFont(titleSettings.value.fontFamily)
         }
       }
     } catch (error) {
@@ -161,9 +161,9 @@
     const handleTitleUpdate = (event: CustomEvent) => {
       titleSettings.value = { ...titleSettings.value, ...event.detail }
       
-      // 載入 Google Font（如果需要）
+      // 載入字體（如果需要）
       if (event.detail.fontFamily) {
-        loadGoogleFont(event.detail.fontFamily)
+        loadFont(event.detail.fontFamily)
       }
     }
     

@@ -79,6 +79,17 @@ export const testChineseFonts = () => {
 }
 
 /**
+ * 測試自定義字體
+ */
+export const testCustomFonts = () => {
+  const customFonts = [
+    'jf-openhuninn'
+  ]
+  
+  return testMultipleFonts(customFonts)
+}
+
+/**
  * 測試常用英文字體
  */
 export const testEnglishFonts = () => {

@@ -1,6 +1,6 @@
 import { Client } from 'minio'
 
-const createMinioClient = () => {
+export const createMinioClient = () => {
   // 對於容器環境，使用內部 endpoint 進行操作
   const internalConfig = {
     endPoint: process.env.MINIO_ENDPOINT || 'localhost',

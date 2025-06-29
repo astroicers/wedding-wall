@@ -61,6 +61,14 @@
                   <el-option label="中文圓體" value="cwTeXYen" />
                   <el-option label="中文仿宋體" value="cwTeXFangSong" />
                 </el-option-group>
+                <el-option-group v-if="customFonts.length > 0" label="自定義字體">
+                  <el-option 
+                    v-for="font in customFonts" 
+                    :key="font.name"
+                    :label="font.displayName" 
+                    :value="font.name" 
+                  />
+                </el-option-group>
               </el-select>
             </el-form-item>
             
@@ -109,6 +117,7 @@
 
 <script setup lang="ts">
 import { Edit, RefreshRight } from '@element-plus/icons-vue'
+import { useGoogleFonts } from '~/composables/useGoogleFonts'
 
 // 設定項目
 const wallTitle = ref('婚禮祝福牆')
@@ -121,11 +130,14 @@ const fontSize = ref(48)
 const fontSizeOptions = [20, 24, 28, 32, 36, 40, 44, 48, 52, 56, 60, 64, 72]
 
 // 從 localStorage 載入設定
-onMounted(() => {
-  loadSettings()
+onMounted(async () => {
+  await loadCustomFontsList()
+  // 確保字體列表載入完成後再載入設定和字體
+  await nextTick()
+  await loadSettings()
 })
 
-const loadSettings = () => {
+const loadSettings = async () => {
   try {
     const settings = localStorage.getItem('wallTitleSettings')
     if (settings) {
@@ -136,8 +148,8 @@ const loadSettings = () => {
       fontFamily.value = parsed.fontFamily || 'system-ui, -apple-system, sans-serif'
       fontSize.value = parsed.fontSize || 48
       
-      // 載入 Google Font（如果需要）
-      loadGoogleFont(fontFamily.value)
+      // 載入字體（如果需要）
+      await loadFont(fontFamily.value)
     }
   } catch (error) {
     console.error('載入標題設定失敗:', error)
@@ -163,12 +175,12 @@ const updateTitle = () => {
 }
 
 // 使用 Google Fonts 工具
-const { isGoogleFont, getFontFamilyWithFallback, loadGoogleFont } = useGoogleFonts()
+const { isGoogleFont, getFontFamilyWithFallback, loadFont, customFonts, loadCustomFontsList } = useGoogleFonts()
 
 // 處理字體變更
-const handleFontChange = (value: string) => {
+const handleFontChange = async (value: string) => {
   fontFamily.value = value
-  loadGoogleFont(value)
+  await loadFont(value)
   updateTitle()
 }
 
