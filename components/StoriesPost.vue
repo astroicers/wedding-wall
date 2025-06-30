@@ -214,7 +214,6 @@ const handleLike = () => {
   background: linear-gradient(135deg, rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.5));
   padding: 16px 20px;
   border-radius: 16px;
-  backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.2);
   text-align: right;
 }
@@ -239,7 +238,6 @@ const handleLike = () => {
   justify-content: center;
   cursor: pointer;
   transition: all 0.3s ease;
-  backdrop-filter: blur(10px);
 }
 
 .action-btn:hover {

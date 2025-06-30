@@ -312,7 +312,6 @@ onMounted(() => {
   background: rgba(255, 255, 255, 0.2);
   border: 2px solid rgba(255, 255, 255, 0.3);
   color: white;
-  backdrop-filter: blur(10px);
   transition: all 0.3s ease;
 }
 

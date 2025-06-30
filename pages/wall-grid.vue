@@ -93,15 +93,6 @@
         </div>
       </div>
       
-      <!-- 進度指示器 -->
-      <div class="progress-indicator">
-        <span 
-          v-for="(msg, index) in messages" 
-          :key="index"
-          class="progress-dot"
-          :class="{ active: index === currentIndex }"
-        ></span>
-      </div>
     </div>
     
     <!-- 空狀態 -->
@@ -149,18 +140,26 @@ useHead({
   ]
 })
 
-// 計算背景樣式，使用 Pinia store 的快取安全 URL
+// 背景樣式緩存，避免頻繁重新計算導致閃動
+const cachedBackgroundStyle = ref({})
+const lastBackgroundUrl = ref('')
+
+// 計算背景樣式，使用緩存機制避免閃動
 const backgroundStyle = computed(() => {
   const bgUrl = backgroundStore.cachedBackgroundUrl
-  if (bgUrl) {
-    return {
+  
+  // 只有當背景URL真正改變時才更新樣式
+  if (bgUrl && bgUrl !== lastBackgroundUrl.value) {
+    lastBackgroundUrl.value = bgUrl
+    cachedBackgroundStyle.value = {
       backgroundImage: `url(${bgUrl})`,
       backgroundSize: 'cover',
       backgroundPosition: 'center',
       backgroundRepeat: 'no-repeat'
     }
   }
-  return {}
+  
+  return cachedBackgroundStyle.value
 })
 
 // 計算當前顯示的訊息組合
@@ -272,10 +271,10 @@ onMounted(async () => {
     messagesStore.fetchMessages(false)
   }, 5000)
   
-  // 每30秒重新檢查背景圖片是否有更新
+  // 每5分鐘重新檢查背景圖片是否有更新（減少頻率避免閃動）
   setInterval(() => {
     backgroundStore.loadBackground()
-  }, 30000)
+  }, 300000)
   
   // 監聽背景更新訊息
   const handleBackgroundUpdate = (event: MessageEvent) => {
@@ -326,6 +325,16 @@ watch(() => messages.value.length, (newLength) => {
   align-items: center;
   padding: 0;
   box-sizing: border-box;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  background-attachment: fixed;
+  transition: background-image 0.5s ease-in-out;
 }
 
 /* 返回按鈕容器 - 隱藏區域 */
@@ -355,7 +364,6 @@ watch(() => messages.value.length, (newLength) => {
   padding: 0.75rem 1rem;
   background: rgba(0, 0, 0, 0.5);
   border-radius: 25px;
-  backdrop-filter: blur(10px);
   transition: all 0.3s ease;
   opacity: 0;
   transform: translate(-20px, -10px);
@@ -377,7 +385,6 @@ watch(() => messages.value.length, (newLength) => {
   text-align: center;
   padding: 2rem 0 1rem;
   background: rgba(0, 0, 0, 0.3);
-  backdrop-filter: blur(10px);
   width: 100vw;
   margin: 0;
 }
@@ -467,6 +474,7 @@ watch(() => messages.value.length, (newLength) => {
   justify-content: center;
   border-radius: 12px;
   overflow: hidden;
+  opacity: 1 !important;
 }
 
 
@@ -491,35 +499,9 @@ watch(() => messages.value.length, (newLength) => {
   justify-content: center;
   border-radius: 12px;
   overflow: hidden;
+  opacity: 1 !important;
 }
 
-/* 進度指示器 */
-.progress-indicator {
-  position: absolute;
-  bottom: 2rem;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  gap: 0.5rem;
-  padding: 0.75rem;
-  background: rgba(0, 0, 0, 0.3);
-  backdrop-filter: blur(10px);
-  border-radius: 30px;
-}
-
-.progress-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.3);
-  transition: all 0.3s ease;
-}
-
-.progress-dot.active {
-  background: white;
-  transform: scale(1.5);
-  box-shadow: 0 0 10px rgba(255, 255, 255, 0.6);
-}
 
 /* 空狀態 */
 .empty-state {
@@ -533,7 +515,6 @@ watch(() => messages.value.length, (newLength) => {
   color: rgba(255, 255, 255, 0.9);
   gap: 1rem;
   background: rgba(0, 0, 0, 0.3);
-  backdrop-filter: blur(5px);
 }
 
 .empty-state h3 {
@@ -639,5 +620,29 @@ watch(() => messages.value.length, (newLength) => {
 
 .wall-grid-page::-webkit-scrollbar {
   display: none;
+}
+
+/* 移除所有點擊選取效果 */
+.wall-grid-page *,
+.wall-grid-page *:before,
+.wall-grid-page *:after {
+  outline: none !important;
+  -webkit-tap-highlight-color: transparent !important;
+  -webkit-touch-callout: none !important;
+  -webkit-user-select: none !important;
+  -khtml-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
+  user-select: none !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  appearance: none !important;
+}
+
+.wall-grid-page *:focus,
+.wall-grid-page *:active,
+.wall-grid-page *:hover {
+  outline: none !important;
+  -webkit-tap-highlight-color: transparent !important;
 }
 </style>

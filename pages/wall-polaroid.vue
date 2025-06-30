@@ -312,7 +312,6 @@ onMounted(async () => {
   color: #e91e63;
   border-radius: 25px;
   cursor: pointer;
-  backdrop-filter: blur(10px);
   border: 1px solid rgba(233, 30, 99, 0.2);
   box-shadow: 0 4px 15px rgba(233, 30, 99, 0.2);
   transition: all 0.3s ease;
@@ -371,7 +370,6 @@ onMounted(async () => {
   border-radius: 20px;
   font-size: 14px;
   font-weight: 500;
-  backdrop-filter: blur(10px);
   border: 1px solid rgba(233, 30, 99, 0.2);
   box-shadow: 0 4px 15px rgba(233, 30, 99, 0.2);
 }
@@ -397,7 +395,6 @@ onMounted(async () => {
   background: rgba(255, 255, 255, 0.9) !important;
   border: 1px solid rgba(233, 30, 99, 0.2) !important;
   color: #e91e63 !important;
-  backdrop-filter: blur(10px);
   box-shadow: 0 4px 15px rgba(233, 30, 99, 0.2);
 }
 
@@ -439,7 +436,6 @@ onMounted(async () => {
   border-radius: 50% !important;
   margin-top: -25px !important;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2) !important;
-  backdrop-filter: blur(10px) !important;
   transition: all 0.3s ease !important;
   border: 1px solid rgba(255, 255, 255, 0.3) !important;
 }

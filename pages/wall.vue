@@ -84,18 +84,26 @@
     ]
   })
 
-  // 計算背景樣式，使用 Pinia store 的快取安全 URL
+  // 背景樣式緩存，避免頻繁重新計算導致閃動
+  const cachedBackgroundStyle = ref({})
+  const lastBackgroundUrl = ref('')
+
+  // 計算背景樣式，使用緩存機制避免閃動
   const backgroundStyle = computed(() => {
     const bgUrl = backgroundStore.cachedBackgroundUrl
-    if (bgUrl) {
-      return {
+    
+    // 只有當背景URL真正改變時才更新樣式
+    if (bgUrl && bgUrl !== lastBackgroundUrl.value) {
+      lastBackgroundUrl.value = bgUrl
+      cachedBackgroundStyle.value = {
         backgroundImage: `url(${bgUrl})`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat'
       }
     }
-    return {}
+    
+    return cachedBackgroundStyle.value
   })
 
   
@@ -144,10 +152,10 @@
       messagesStore.fetchMessages(false)
     }, 5000)
     
-    // 每30秒重新檢查背景圖片是否有更新
+    // 每5分鐘重新檢查背景圖片是否有更新（減少頻率避免閃動）
     setInterval(() => {
       backgroundStore.loadBackground()
-    }, 30000)
+    }, 300000)
     
     // 監聽背景更新訊息
     const handleBackgroundUpdate = (event: MessageEvent) => {
@@ -190,6 +198,8 @@
     overflow: hidden;
     display: flex;
     flex-direction: column;
+    background-attachment: fixed;
+    transition: background-image 0.5s ease-in-out;
   }
 
   /* 返回按鈕容器 - 隱藏區域 */
@@ -219,7 +229,6 @@
     padding: 0.75rem 1rem;
     background: rgba(0, 0, 0, 0.5);
     border-radius: 25px;
-    backdrop-filter: blur(10px);
     transition: all 0.3s ease;
     opacity: 0;
     transform: translate(-20px, -10px);
@@ -241,7 +250,6 @@
     text-align: center;
     padding: 2rem 1rem 1rem;
     background: rgba(0, 0, 0, 0.3);
-    backdrop-filter: blur(10px);
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   }
   
@@ -288,7 +296,6 @@
     gap: 0.5rem;
     padding: 0.75rem;
     background: rgba(0, 0, 0, 0.3);
-    backdrop-filter: blur(10px);
     border-radius: 30px;
   }
   
@@ -328,8 +335,7 @@
     color: rgba(255, 255, 255, 0.9);
     gap: 1rem;
     background: rgba(0, 0, 0, 0.3);
-    backdrop-filter: blur(5px);
-  }
+    }
 
   .empty-state h3 {
     margin: 0;

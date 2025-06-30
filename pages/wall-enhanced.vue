@@ -1,6 +1,6 @@
 <template>
-  <div class="wall-page" data-page="wall" :style="backgroundStyle">
-    <!-- 返回按鈕 -->
+  <div class="wall-page" data-page="wall-enhanced" :style="backgroundStyle">
+    <!-- 返回按鈕容器 - 隱藏區域 -->
     <div class="back-button-container">
       <div class="back-button" @click="navigateTo('/')">
         <el-icon size="20">
@@ -8,6 +8,20 @@
         </el-icon>
         <span>返回首頁</span>
       </div>
+    </div>
+    
+    <!-- 祝福牆標題 -->
+    <div class="wall-header" v-if="messages.length > 0">
+      <h1 class="wall-title" :style="{ 
+        color: titleSettings.titleColor,
+        fontFamily: getFontFamilyWithFallback(titleSettings.fontFamily),
+        fontSize: titleSettings.fontSize + 'px'
+      }">{{ titleSettings.wallTitle }}</h1>
+      <p class="wall-subtitle" v-if="titleSettings.wallSubtitle" :style="{ 
+        color: titleSettings.titleColor,
+        fontFamily: getFontFamilyWithFallback(titleSettings.fontFamily),
+        fontSize: (titleSettings.fontSize * 0.5) + 'px'
+      }">{{ titleSettings.wallSubtitle }}</p>
     </div>
     
     <!-- 祝福牆內容 -->
@@ -120,6 +134,7 @@
 import { Swiper, SwiperSlide } from 'swiper/vue'
 import { Navigation, Pagination, Autoplay, EffectFade, EffectCube, EffectFlip, EffectCoverflow, Keyboard } from 'swiper/modules'
 import InstagramPost from '~/components/InstagramPost.vue'
+import { useGoogleFonts } from '~/composables/useGoogleFonts'
 import { 
   ArrowLeft, 
   ArrowRight, 
@@ -147,6 +162,9 @@ const messagesStore = useMessagesStore()
 const backgroundStore = useBackgroundStore()
 const uiStore = useUIStore()
 
+// 使用 Google Fonts 工具
+const { isGoogleFont, getFontFamilyWithFallback, loadFont } = useGoogleFonts()
+
 // 響應式資料
 const messages = computed(() => messagesStore.messages)
 const swiperInstance = ref(null)
@@ -157,21 +175,47 @@ const isControlsForced = ref(false)
 const showIndicator = ref(true)
 const currentEffect = ref('coverflow')
 
-// 設定項目
+// 標題設定
+const titleSettings = ref({
+  wallTitle: '婚禮祝福牆',
+  wallSubtitle: '',
+  titleColor: '#ffffff',
+  fontFamily: 'system-ui, -apple-system, sans-serif',
+  fontSize: 48
+})
+
+// 牆面設定項目
 const wallSettings = ref({
   autoplayDelay: 3,
   imageDelay: 1
 })
 
-// 載入設定
-const loadSettings = () => {
+// 載入標題設定
+const loadTitleSettings = () => {
+  try {
+    const settings = localStorage.getItem('wallTitleSettings')
+    if (settings) {
+      titleSettings.value = { ...titleSettings.value, ...JSON.parse(settings) }
+      
+      // 載入字體（如果需要）
+      if (titleSettings.value.fontFamily) {
+        loadFont(titleSettings.value.fontFamily)
+      }
+    }
+  } catch (error) {
+    console.error('載入標題設定失敗:', error)
+  }
+}
+
+// 載入牆面設定
+const loadWallSettings = () => {
   try {
     const settings = localStorage.getItem('wallSettings')
     if (settings) {
       wallSettings.value = { ...wallSettings.value, ...JSON.parse(settings) }
     }
   } catch (error) {
-    console.error('載入設定失敗:', error)
+    console.error('載入牆面設定失敗:', error)
   }
 }
 
@@ -196,18 +240,26 @@ const autoplayConfig = computed(() => ({
   pauseOnMouseEnter: true,
 }))
 
-// 計算背景樣式
+// 背景樣式緩存，避免頻繁重新計算導致閃動
+const cachedBackgroundStyle = ref({})
+const lastBackgroundUrl = ref('')
+
+// 計算背景樣式，使用緩存機制避免閃動
 const backgroundStyle = computed(() => {
   const bgUrl = backgroundStore.cachedBackgroundUrl
-  if (bgUrl) {
-    return {
+  
+  // 只有當背景URL真正改變時才更新樣式
+  if (bgUrl && bgUrl !== lastBackgroundUrl.value) {
+    lastBackgroundUrl.value = bgUrl
+    cachedBackgroundStyle.value = {
       backgroundImage: `url(${bgUrl})`,
       backgroundSize: 'cover',
       backgroundPosition: 'center',
       backgroundRepeat: 'no-repeat'
     }
   }
-  return {}
+  
+  return cachedBackgroundStyle.value
 })
 
 // 自定義分頁指示器
@@ -293,20 +345,34 @@ useHead({
   ]
 })
 
+// 監聽標題設定變更
+const handleTitleUpdated = (event: CustomEvent) => {
+  titleSettings.value = { ...titleSettings.value, ...event.detail }
+  
+  // 載入字體（如果需要）
+  if (event.detail.fontFamily) {
+    loadFont(event.detail.fontFamily)
+  }
+}
+
+// 監聽牆面設定變更
+const handleWallSettingsUpdated = (event: CustomEvent) => {
+  wallSettings.value = { ...wallSettings.value, ...event.detail }
+}
+
 onMounted(async () => {
   // 設定當前頁面
-  uiStore.setCurrentPage('wall')
+  uiStore.setCurrentPage('wall-enhanced')
   
-  // 載入設定
-  loadSettings()
+  // 載入所有設定
+  loadTitleSettings()
+  loadWallSettings()
   
   // 載入資料
   await Promise.all([
     messagesStore.fetchMessages(),
     backgroundStore.loadBackground(true)
   ])
-  
-  // 初始化完成
   
   // 定期更新資料
   const dataInterval = setInterval(() => {
@@ -315,7 +381,7 @@ onMounted(async () => {
   
   const backgroundInterval = setInterval(() => {
     backgroundStore.loadBackground()
-  }, 30000)
+  }, 300000)
   
   // 監聽鍵盤事件
   document.addEventListener('keydown', handleKeydown)
@@ -329,10 +395,8 @@ onMounted(async () => {
   window.addEventListener('message', handleBackgroundUpdate)
   
   // 監聽設定更新
-  const handleSettingsUpdate = (event: CustomEvent) => {
-    wallSettings.value = { ...wallSettings.value, ...event.detail }
-  }
-  window.addEventListener('wallSettingsUpdated', handleSettingsUpdate)
+  window.addEventListener('wallTitleUpdated', handleTitleUpdated as EventListener)
+  window.addEventListener('wallSettingsUpdated', handleWallSettingsUpdated as EventListener)
   
   // 清理
   onUnmounted(() => {
@@ -340,58 +404,92 @@ onMounted(async () => {
     clearInterval(backgroundInterval)
     document.removeEventListener('keydown', handleKeydown)
     window.removeEventListener('message', handleBackgroundUpdate)
-    window.removeEventListener('wallSettingsUpdated', handleSettingsUpdate)
+    window.removeEventListener('wallTitleUpdated', handleTitleUpdated as EventListener)
+    window.removeEventListener('wallSettingsUpdated', handleWallSettingsUpdated as EventListener)
   })
 })
 </script>
 
 <style scoped>
 .wall-page {
+  width: 100vw;
+  height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   position: fixed;
   top: 0;
   left: 0;
-  width: 100vw;
-  height: 100vh;
+  z-index: 9999;
   overflow: hidden;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  transition: all 0.5s ease;
-  margin: 0;
-  padding: 0;
-  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  background-attachment: fixed;
+  transition: background-image 0.5s ease-in-out;
 }
 
+/* 返回按鈕容器 - 隱藏區域 */
 .back-button-container {
   position: absolute;
-  top: 20px;
-  left: 20px;
+  top: 0;
+  left: 0;
+  width: 120px;
+  height: 80px;
   z-index: 1000;
-  opacity: 0;
-  transform: translateX(-10px);
-  transition: all 0.3s ease;
 }
 
-.wall-page:hover .back-button-container {
+.back-button-container:hover .back-button {
   opacity: 1;
-  transform: translateX(0);
+  transform: translate(0, 0);
 }
 
 .back-button {
+  position: absolute;
+  top: 20px;
+  left: 20px;
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 12px 20px;
-  background: rgba(0, 0, 0, 0.5);
-  color: white;
-  border-radius: 25px;
+  gap: 0.5rem;
+  color: rgba(255, 255, 255, 0.9);
   cursor: pointer;
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 0.75rem 1rem;
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 25px;
   transition: all 0.3s ease;
+  opacity: 0;
+  transform: translate(-20px, -10px);
 }
 
 .back-button:hover {
+  color: white;
   background: rgba(0, 0, 0, 0.7);
-  transform: scale(1.05);
+}
+
+.back-button span {
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+/* 標題區域 */
+.wall-header {
+  position: relative;
+  text-align: center;
+  padding: 2rem 0 1rem;
+  background: rgba(0, 0, 0, 0.3);
+  width: 100vw;
+  margin: 0;
+  flex-shrink: 0;
+}
+
+.wall-title {
+  margin: 0;
+  font-weight: bold;
+  text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.4);
+  letter-spacing: 2px;
+}
+
+.wall-subtitle {
+  margin: 0.5rem 0 0;
+  opacity: 0.9;
+  text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.4);
 }
 
 .wall {
@@ -399,27 +497,31 @@ onMounted(async () => {
   height: 100%;
   display: flex;
   flex-direction: column;
+  flex: 1;
+  overflow: hidden;
 }
 
 .message-swiper {
   flex: 1;
   width: 100%;
   height: 100%;
-  padding: 50px 0;
+  padding: 20px 0;
+  overflow: hidden;
 }
 
 .message-swiper .swiper-slide {
   transition: all 0.3s ease;
+  padding: 0 20px;
 }
 
 .message-swiper .swiper-slide-active {
-  transform: scale(1.1) !important;
+  transform: scale(1.0) !important;
   z-index: 10 !important;
 }
 
 .message-swiper .swiper-slide:not(.swiper-slide-active) {
-  opacity: 0.7;
-  transform: scale(0.85);
+  opacity: 0.6;
+  transform: scale(0.9);
 }
 
 .custom-nav-button {
@@ -432,7 +534,6 @@ onMounted(async () => {
   background: rgba(0, 0, 0, 0.5) !important;
   color: white !important;
   border: 2px solid rgba(255, 255, 255, 0.3) !important;
-  backdrop-filter: blur(10px);
   opacity: 0;
   transition: all 0.3s ease !important;
   z-index: 10;
@@ -482,7 +583,6 @@ onMounted(async () => {
   font-size: 14px;
   font-weight: 500;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
@@ -507,7 +607,6 @@ onMounted(async () => {
   background: rgba(0, 0, 0, 0.5) !important;
   border: 1px solid rgba(255, 255, 255, 0.3) !important;
   color: white !important;
-  backdrop-filter: blur(10px);
 }
 
 .control-panel .el-button:hover {
@@ -563,10 +662,37 @@ onMounted(async () => {
   opacity: 0.8;
 }
 
+/* 移除滾動條 */
+.wall-page {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.wall-page::-webkit-scrollbar {
+  display: none;
+}
+
+.message-swiper {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.message-swiper::-webkit-scrollbar {
+  display: none;
+}
+
 /* 響應式設計 */
 @media (max-width: 768px) {
-  .progress-bar {
-    width: 250px;
+  .wall-header {
+    padding: 1.5rem 0 0.75rem;
+  }
+  
+  .wall-title {
+    font-size: 2rem;
+  }
+  
+  .wall-subtitle {
+    font-size: 1rem;
   }
   
   .custom-nav-button {
@@ -580,8 +706,59 @@ onMounted(async () => {
   }
   
   .back-button-container {
+    width: 100px;
+    height: 70px;
+  }
+  
+  .back-button {
+    top: 15px;
+    left: 15px;
+    padding: 0.5rem 0.75rem;
+  }
+  
+  .back-button span {
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .back-button-container {
+    width: 80px;
+    height: 60px;
+  }
+  
+  .back-button {
     top: 10px;
     left: 10px;
+    padding: 0.5rem;
+  }
+  
+  .back-button span {
+    display: none;
+  }
+  
+  .wall-title {
+    font-size: 1.5rem;
+  }
+  
+  .wall-subtitle {
+    font-size: 0.9rem;
+  }
+  
+  .control-panel {
+    bottom: 5px;
+    right: 5px;
+    gap: 5px;
+  }
+  
+  .page-indicator {
+    top: 10px;
+    right: 10px;
+  }
+  
+  .counter {
+    padding: 6px 12px;
+    font-size: 12px;
   }
 }
 </style>

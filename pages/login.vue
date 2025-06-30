@@ -132,7 +132,6 @@ watch(password, () => {
   border-radius: 20px;
   padding: 2.5rem;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-  backdrop-filter: blur(10px);
 }
 
 .login-header {

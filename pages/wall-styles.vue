@@ -145,7 +145,6 @@ onMounted(() => {
   color: white;
   border-radius: 25px;
   cursor: pointer;
-  backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.3);
   transition: all 0.3s ease;
 }

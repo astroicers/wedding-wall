@@ -2,19 +2,23 @@
   <div class="instagram-post">
     <!-- 貼文容器 -->
     <div class="post-container" :class="{ 'has-image': message.photo }">
-      <!-- 背景圖片 -->
-      <div 
-        v-if="message.photo" 
-        class="post-background"
-        :style="{ backgroundImage: `url(${message.photo})` }"
-      ></div>
+      <!-- 照片區域 -->
+      <div v-if="message.photo" class="photo-display-area">
+        <!-- 主照片 -->
+        <div 
+          class="photo-main"
+          :style="{ backgroundImage: `url(${message.photo})` }"
+        ></div>
+      </div>
       
+            
       <!-- 沒有圖片時的漸變背景 -->
       <div v-else class="post-gradient-bg"></div>
       
-      <!-- 遮罩層 -->
-      <div class="post-overlay"></div>
+      <!-- 沒有照片時的毛玻璃效果 -->
+      <div v-else class="post-overlay glass-effect-no-photo"></div>
       
+            
       <!-- 內容層 -->
       <div class="post-content">
         <!-- 用戶資訊 -->
@@ -128,16 +132,16 @@ onMounted(() => {
   width: 100%;
   height: 100%;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
-  padding: 20px;
+  padding: 0;
+  padding-top: 10%; /* 向上縮小1/10 */
 }
 
 .post-container {
   position: relative;
   width: 100%;
-  max-width: 500px;
-  height: 600px;
+  height: 90%; /* 配合向上縮小1/10 */
   border-radius: 20px;
   overflow: hidden;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
@@ -149,6 +153,32 @@ onMounted(() => {
   transform: scale(1.02);
 }
 
+/* 照片顯示區域 - 整個卡片中間，不被毛玻璃覆蓋 */
+.photo-display-area {
+  position: absolute;
+  top: 15%;
+  left: 0;
+  width: 100%;
+  height: 60%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 3;
+}
+
+/* 主照片 - 居中，左右貼齊卡片，完全不透明 */
+.photo-main {
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+  opacity: 1;
+  z-index: 4;
+}
+
+
 .post-background {
   position: absolute;
   top: 0;
@@ -158,7 +188,6 @@ onMounted(() => {
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  filter: blur(1px);
 }
 
 .post-gradient-bg {
@@ -185,23 +214,43 @@ onMounted(() => {
   left: 0;
   width: 100%;
   height: 100%;
-  background: linear-gradient(
+  z-index: 5;
+}
+
+
+/* 背景效果 - 僅適用於無照片情況 */
+.glass-effect {
+  background: rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background-image: linear-gradient(
     to bottom,
-    rgba(0, 0, 0, 0.3) 0%,
-    rgba(0, 0, 0, 0.1) 40%,
-    rgba(0, 0, 0, 0.1) 60%,
-    rgba(0, 0, 0, 0.6) 100%
+    rgba(255, 255, 255, 0.1) 0%,
+    rgba(255, 255, 255, 0.05) 50%,
+    rgba(0, 0, 0, 0.1) 100%
+  );
+}
+
+/* 無照片時的背景效果 */
+.glass-effect-no-photo {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background-image: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.15) 0%,
+    rgba(255, 255, 255, 0.1) 50%,
+    rgba(255, 255, 255, 0.05) 100%
   );
 }
 
 .post-content {
   position: relative;
-  z-index: 2;
+  z-index: 10;
   height: 100%;
   display: flex;
   flex-direction: column;
   padding: 20px;
   color: white;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9);
 }
 
 .user-info {
@@ -230,7 +279,7 @@ onMounted(() => {
 .username {
   font-weight: 600;
   font-size: 16px;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
   margin-bottom: 2px;
 }
 
@@ -266,7 +315,6 @@ onMounted(() => {
   background: linear-gradient(135deg, rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.5));
   padding: 15px 20px;
   border-radius: 15px;
-  backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.2);
   color: white;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);

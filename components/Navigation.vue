@@ -52,7 +52,6 @@ import { Star } from '@element-plus/icons-vue'
 <style scoped>
 .navigation-bar {
   background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(10px);
   padding: 1rem 2rem;
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
   position: sticky;

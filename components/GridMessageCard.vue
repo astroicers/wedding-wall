@@ -4,7 +4,6 @@
     <div v-if="message.photo" class="photo-section">
       <div class="photo-container">
         <img :src="message.photo" :alt="`${message.name}的照片`" />
-        <div v-if="!isActive" class="overlay"></div>
       </div>
     </div>
     
@@ -181,17 +180,6 @@ const truncateText = (text: string) => {
   transition: all 0.3s ease;
 }
 
-/* 透明覆蓋層 */
-.overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0);
-  backdrop-filter: blur(0px);
-  transition: all 0.3s ease;
-}
 
 /* 文字區域 */
 .content-section {
@@ -245,6 +233,33 @@ const truncateText = (text: string) => {
 
 .grid-message-card {
   animation: slideIn 0.4s ease-out;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+.grid-message-card:focus {
+  outline: none;
+}
+
+.grid-message-card * {
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+.grid-message-card *:focus {
+  outline: none;
 }
 
 /* 響應式調整 */

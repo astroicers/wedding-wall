@@ -312,7 +312,6 @@ const formatDate = (date: Date) => {
   border-radius: 2px;
   transform: rotate(-2deg) translateX(10px) translateY(10px);
   z-index: 1;
-  filter: blur(15px);
 }
 
 /* 響應式設計 */
