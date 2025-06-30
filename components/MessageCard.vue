@@ -64,10 +64,10 @@ defineProps<{
   }
 }
 
-/* 圖片區域 - 固定高度 */
+/* 圖片區域 - 更大的高度 */
 .photo-section {
   width: 100%;
-  height: 400px;
+  height: 500px;
   overflow: hidden;
   position: relative;
   background: #f5f5f5;
@@ -85,7 +85,7 @@ defineProps<{
 .photo-container img {
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  object-fit: cover;
   background: white;
 }
 

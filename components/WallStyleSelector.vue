@@ -117,14 +117,61 @@ const PolaroidIcon = {
   }
 }
 
+const GridIcon = {
+  render() {
+    return h('div', { class: 'custom-icon grid-icon' }, [
+      h('div', { class: 'grid-cell' }),
+      h('div', { class: 'grid-cell main' }),
+      h('div', { class: 'grid-cell' }),
+      h('div', { class: 'grid-cell' }),
+      h('div', { class: 'grid-cell' })
+    ])
+  }
+}
+
+const ClassicIcon = {
+  render() {
+    return h('div', { class: 'custom-icon classic-icon' }, [
+      h('div', { class: 'classic-frame' }),
+      h('div', { class: 'classic-content' })
+    ])
+  }
+}
+
 
 const wallStyles = [
+  {
+    id: 'classic',
+    name: '經典祝福牆',
+    description: '傳統單一顯示模式，圖片更大更清晰',
+    route: '/wall',
+    featured: true,
+    iconComponent: ClassicIcon,
+    previewText: '📷 經典風',
+    previewStyle: {
+      background: 'linear-gradient(135deg, #667eea, #764ba2)'
+    },
+    features: ['大圖顯示', '簡潔清爽', '經典設計']
+  },
+  {
+    id: 'grid',
+    name: '網格祝福牆',
+    description: '5列網格佈局，中間主體動態切換展示',
+    route: '/wall-grid',
+    featured: true,
+    iconComponent: GridIcon,
+    previewText: '⚡ 網格風',
+    previewStyle: {
+      background: 'linear-gradient(135deg, #fc466b, #3f5efb)'
+    },
+    features: ['5列佈局', '動態切換', '豐富展示']
+  },
   {
     id: 'instagram',
     name: 'Instagram 風格',
     description: '社交媒體風格的貼文展示，支援互動效果',
     route: '/wall-enhanced',
-    featured: true,
+    featured: false,
     iconComponent: 'el-icon',
     previewText: '❤️ 點讚互動',
     previewStyle: {
@@ -417,6 +464,50 @@ const navigateToStyle = async (route: string) => {
   height: 20px;
   background: rgba(255, 255, 255, 0.6);
   border-radius: 2px;
+  margin: 4px auto;
+}
+
+/* 網格圖標樣式 */
+.grid-icon {
+  display: grid;
+  grid-template-columns: 1fr 2fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 3px;
+  align-items: center;
+  justify-items: center;
+}
+
+.grid-icon .grid-cell {
+  width: 100%;
+  height: 18px;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 3px;
+}
+
+.grid-icon .grid-cell.main {
+  grid-column: 2;
+  grid-row: 1 / 3;
+  height: 39px;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 4px;
+}
+
+/* 經典圖標樣式 */
+.classic-icon .classic-frame {
+  width: 42px;
+  height: 32px;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 6px;
+  margin: 0 auto 8px;
+  position: relative;
+  border: 2px solid rgba(255, 255, 255, 0.7);
+}
+
+.classic-icon .classic-content {
+  width: 32px;
+  height: 20px;
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 3px;
   margin: 4px auto;
 }
 
