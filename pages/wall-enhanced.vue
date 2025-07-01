@@ -47,7 +47,7 @@
           stretch: 0,
           depth: 200,
           modifier: 1,
-          slideShadows: true
+          slideShadows: false
         }"
         :keyboard="{ enabled: true }"
         :loop="true"
@@ -520,7 +520,7 @@ onMounted(async () => {
 }
 
 .message-swiper .swiper-slide:not(.swiper-slide-active) {
-  opacity: 0.6;
+  opacity: 1;
   transform: scale(0.9);
 }
 

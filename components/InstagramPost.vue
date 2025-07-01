@@ -19,6 +19,14 @@
       <div v-else class="post-overlay glass-effect-no-photo"></div>
       
             
+      <!-- 有照片時的毛玻璃覆蓋層 -->
+      <div v-if="message.photo" class="glass-overlay">
+        <!-- 上方毛玻璃區域 -->
+        <div class="glass-overlay-top"></div>
+        <!-- 下方毛玻璃區域 -->
+        <div class="glass-overlay-bottom"></div>
+      </div>
+      
       <!-- 內容層 -->
       <div class="post-content">
         <!-- 用戶資訊 -->
@@ -240,6 +248,43 @@ onMounted(() => {
     rgba(255, 255, 255, 0.1) 50%,
     rgba(255, 255, 255, 0.05) 100%
   );
+}
+
+/* 有照片時的毛玻璃覆蓋層 */
+.glass-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 6;
+  pointer-events: none;
+}
+
+/* 上方毛玻璃區域 (0% - 15%) */
+.glass-overlay-top {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 15%;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* 下方毛玻璃區域 (75% - 100%) */
+.glass-overlay-bottom {
+  position: absolute;
+  top: 75%;
+  left: 0;
+  width: 100%;
+  height: 25%;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .post-content {
