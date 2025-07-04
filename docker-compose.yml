@@ -17,10 +17,16 @@ services:
       - wedding-wall-network
 
   wedding-wall:
-    build: .
+    build:
+      context: .
+      args:
+        - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+        - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+        - JWT_SECRET=${JWT_SECRET}
+        - APP_URL=${APP_URL:-http://localhost:3000}
     container_name: wedding-wall-app
     ports:
-      - "8080:3000"
+      - "3000:3000"
     environment:
       NUXT_HOST: 0.0.0.0
       MINIO_ENDPOINT: minio
@@ -29,8 +35,12 @@ services:
       MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-admin}
       MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-admin123}
       MINIO_BUCKET_NAME: ${MINIO_BUCKET_NAME:-wedding-wall}
-      WEDDING_WALL_PASSWORD: ${WEDDING_WALL_PASSWORD:-wedding2024}
-      NUXT_PUBLIC_SITE_URL: ${NUXT_PUBLIC_SITE_URL:-http://192.168.96.83:8080}
+      # OAuth 環境變數
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+      JWT_SECRET: ${JWT_SECRET}
+      APP_URL: ${APP_URL:-http://localhost:3000}
+      AUTH_PROVIDER: ${AUTH_PROVIDER:-google}
     depends_on:
       - minio
     networks:

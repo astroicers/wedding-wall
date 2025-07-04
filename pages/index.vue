@@ -1,5 +1,23 @@
 <template>
   <div class="home-page">
+    <!-- 用戶狀態欄 -->
+    <div class="user-status-bar" v-if="authStore.isAuthenticated">
+      <div class="user-info">
+        <div class="user-avatar">
+          <img v-if="authStore.userProfile?.picture" :src="authStore.userProfile.picture" :alt="authStore.userProfile?.name" />
+          <el-icon v-else size="24"><User /></el-icon>
+        </div>
+        <div class="user-details">
+          <span class="user-name">{{ authStore.userProfile?.name || authStore.user }}</span>
+          <span class="user-email">{{ authStore.userProfile?.email }}</span>
+        </div>
+      </div>
+      <el-button @click="handleLogout" type="danger" size="small" plain>
+        <el-icon><SwitchButton /></el-icon>
+        登出
+      </el-button>
+    </div>
+
     <!-- 主標題區域 -->
     <div class="hero-section">
       <div class="hero-content">
@@ -204,7 +222,9 @@ import {
   VideoCamera, 
   Document, 
   Tools,
-  ArrowRight
+  ArrowRight,
+  User,
+  SwitchButton
 } from '@element-plus/icons-vue'
 
 // 定義 PhotoIcon 組件
@@ -224,9 +244,24 @@ const PhotoIcon = {
   }
 }
 
+// Auth store
+const authStore = useAuthStore()
+
 // 導航處理函數
 const handleNavigation = (path: string) => {
   navigateTo(path)
+}
+
+// 登出處理函數
+const handleLogout = async () => {
+  try {
+    authStore.logout()
+    ElMessage.success('已成功登出')
+    await navigateTo('/auth/login')
+  } catch (error) {
+    console.error('登出失敗:', error)
+    ElMessage.error('登出失敗，請稍後再試')
+  }
 }
 
 // 設定頁面 meta
@@ -247,6 +282,58 @@ onMounted(() => {
 .home-page {
   min-height: 100vh;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+/* 用戶狀態欄 */
+.user-status-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 30px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.user-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f0f0f0;
+  border: 2px solid white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.user-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.user-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.user-name {
+  font-weight: 600;
+  color: #2c3e50;
+  font-size: 0.95rem;
+}
+
+.user-email {
+  font-size: 0.8rem;
+  color: #7f8c8d;
 }
 
 /* Hero 區域 */
@@ -597,6 +684,14 @@ onMounted(() => {
 
 /* 響應式設計 */
 @media (max-width: 768px) {
+  .user-status-bar {
+    padding: 12px 20px;
+  }
+  
+  .user-details {
+    display: none;
+  }
+  
   .main-title {
     font-size: 2.5rem;
   }

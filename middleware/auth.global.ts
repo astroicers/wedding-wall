@@ -1,6 +1,7 @@
 export default defineNuxtRouteMiddleware((to) => {
-  // Skip auth for API routes and login page
-  if (to.path.startsWith('/api') || to.path === '/login') {
+  // Skip auth for API routes and auth pages only
+  if (to.path.startsWith('/api') || 
+      to.path.startsWith('/auth')) {
     return
   }
 
@@ -8,17 +9,27 @@ export default defineNuxtRouteMiddleware((to) => {
   if (import.meta.client) {
     const authStore = useAuthStore()
     
-    // Access the store state directly
+    // Check if user is authenticated and session is valid
     if (!authStore.isAuthenticated || !authStore.sessionExpiry || Date.now() > authStore.sessionExpiry) {
       // Clear auth state
       authStore.$patch({
         user: null,
+        userProfile: null,
+        userId: null,
+        accessToken: null,
+        refreshToken: null,
+        ssoProvider: null,
         isAuthenticated: false,
         loginTime: null,
         sessionExpiry: null
       })
       
-      return navigateTo('/login')
+      // Clear sessionStorage
+      if (window.sessionStorage) {
+        window.sessionStorage.removeItem('auth-token')
+      }
+      
+      return navigateTo('/auth/login')
     }
   }
 })

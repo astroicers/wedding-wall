@@ -21,6 +21,7 @@ export const createMinioClient = () => {
 }
 
 export const MinioClient = createMinioClient()
+export const minioClient = MinioClient // 為了向後兼容
 
 export const BUCKET_NAME = process.env.MINIO_BUCKET_NAME || 'wedding-wall'
 
