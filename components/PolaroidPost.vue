@@ -51,7 +51,7 @@ const props = defineProps<{
   }
 }>()
 
-const isLongText = computed(() => props.message.text.length > 60)
+const isLongText = computed(() => (props.message.text || '').length > 60)
 
 const formatDate = (date: Date) => {
   return date.toLocaleDateString('zh-TW', { 

@@ -57,21 +57,141 @@ export const useAuthStore = defineStore('auth', {
 
     // 從儲存中恢復會話
     restoreSession() {
-      // 檢查是否有有效的會話
-      if (this.isSessionValid) {
-        console.log('會話已恢復:', this.user)
-        // 恢復 accessToken from sessionStorage
-        if (process.client && window.sessionStorage) {
+      // 只在客戶端執行會話恢復
+      if (!process.client || typeof window === 'undefined') {
+        console.log('🛡️ SSR environment, skipping session restoration')
+        return false
+      }
+      
+      console.log('🔄 Attempting to restore session:', {
+        isAuthenticated: this.isAuthenticated,
+        sessionExpiry: this.sessionExpiry,
+        currentTime: Date.now(),
+        isSessionValid: this.isSessionValid,
+        userId: this.userId,
+        userProfile: !!this.userProfile,
+        hasAccessToken: !!this.accessToken,
+        hasWindow: typeof window !== 'undefined',
+        hasSessionStorage: !!(typeof window !== 'undefined' && window.sessionStorage)
+      })
+      
+      // 檢查 Pinia 持久化的狀態是否已經有效
+      if (this.isAuthenticated && this.userId && this.accessToken && this.isSessionValid) {
+        console.log('✅ Valid session found in Pinia store')
+        
+        // 確保 sessionStorage 中也有 token
+        if (window.sessionStorage) {
           const storedToken = window.sessionStorage.getItem('auth-token')
-          if (storedToken) {
-            this.accessToken = storedToken
+          if (!storedToken && this.accessToken) {
+            console.log('🔧 Restoring token to sessionStorage')
+            window.sessionStorage.setItem('auth-token', this.accessToken)
           }
         }
         return true
-      } else {
-        this.logout()
-        return false
       }
+      
+      // 如果 Pinia 狀態不完整，嘗試從 sessionStorage 恢復
+      if (window.sessionStorage) {
+        const storedToken = window.sessionStorage.getItem('auth-token')
+        console.log('🔍 Checking sessionStorage for token:', {
+          hasToken: !!storedToken,
+          tokenPreview: storedToken ? `${storedToken.substring(0, 20)}...` : 'none'
+        })
+        
+        if (storedToken) {
+          console.log('🔧 Restoring authentication state from sessionStorage token')
+          
+          try {
+            // 清理和解析 JWT token 來恢復完整認證狀態
+            let cleanToken = storedToken.trim()
+            
+            // 如果 token 被 URL 編碼了，先解碼
+            if (cleanToken.includes('%')) {
+              cleanToken = decodeURIComponent(cleanToken)
+            }
+            
+            console.log('🧹 Token cleaning:', {
+              originalLength: storedToken.length,
+              cleanedLength: cleanToken.length,
+              wasEncoded: storedToken !== cleanToken
+            })
+            
+            const tokenParts = cleanToken.split('.')
+            console.log('🧪 Token parts analysis:', {
+              totalParts: tokenParts.length,
+              headerLength: tokenParts[0]?.length,
+              payloadLength: tokenParts[1]?.length,
+              signatureLength: tokenParts[2]?.length,
+              payloadPreview: tokenParts[1]?.substring(0, 20) + '...'
+            })
+            
+            if (tokenParts.length === 3) {
+              // 確保 base64 字符串正確填充
+              let payloadPart = tokenParts[1]
+              
+              // JWT 使用 base64url 編碼，需要轉換為標準 base64
+              payloadPart = payloadPart.replace(/-/g, '+').replace(/_/g, '/')
+              
+              // 添加必要的填充字符
+              while (payloadPart.length % 4) {
+                payloadPart += '='
+              }
+              
+              console.log('🔧 Base64 payload processing:', {
+                originalLength: tokenParts[1].length,
+                processedLength: payloadPart.length,
+                needsPadding: tokenParts[1].length % 4 !== 0,
+                processedPreview: payloadPart.substring(0, 20) + '...'
+              })
+              
+              const payload = JSON.parse(atob(payloadPart))
+              console.log('📄 Token payload:', {
+                sub: payload.sub,
+                email: payload.email,
+                exp: payload.exp,
+                currentTime: Math.floor(Date.now() / 1000)
+              })
+              
+              // 檢查 token 是否過期
+              if (payload.exp && payload.exp > Math.floor(Date.now() / 1000)) {
+                // Token 還有效，完全恢復認證狀態
+                this.userId = payload.sub
+                this.user = payload.email
+                this.userProfile = {
+                  id: payload.sub,
+                  email: payload.email,
+                  name: payload.name || payload.email
+                }
+                this.accessToken = cleanToken // 使用清理後的 token
+                this.isAuthenticated = true
+                this.sessionExpiry = payload.exp * 1000 // 轉換為毫秒
+                this.loginTime = Date.now() - (30 * 60 * 1000) // 估算登入時間
+                
+                // 如果 token 被清理了，更新 sessionStorage
+                if (cleanToken !== storedToken) {
+                  console.log('🔄 Updating sessionStorage with cleaned token')
+                  window.sessionStorage.setItem('auth-token', cleanToken)
+                }
+                
+                console.log('✅ Complete authentication state restored from sessionStorage')
+                return true
+              } else {
+                console.warn('⏰ Token has expired')
+                this.logout()
+                return false
+              }
+            }
+          } catch (error) {
+            console.error('❌ Failed to parse token:', error)
+            this.logout()
+            return false
+          }
+        }
+      }
+      
+      console.warn('❌ No valid session found - clearing state')
+      this.logout()
+      return false
     },
     
     // 新增 SSO 登入
@@ -114,28 +234,62 @@ export const useAuthStore = defineStore('auth', {
           body: { code, state, provider: this.ssoProvider }
         })
         
+        // 清理 token 確保沒有被編碼
+        const cleanToken = data.accessToken.trim()
+        
         this.userProfile = data.user
         this.userId = data.user.id
         this.user = data.user.email // 保持向後兼容
-        this.accessToken = data.accessToken
+        this.accessToken = cleanToken // 使用清理後的 token
         this.refreshToken = data.refreshToken
         this.isAuthenticated = true
         this.loginTime = Date.now()
         this.sessionExpiry = Date.now() + (data.expiresIn * 1000)
         
-        // Store accessToken in sessionStorage only
-        if (process.client && window.sessionStorage) {
-          window.sessionStorage.setItem('auth-token', data.accessToken)
+        // Store accessToken in sessionStorage 確保同步 - 不進行任何編碼
+        if (process.client && typeof window !== 'undefined' && window.sessionStorage) {
+          // 確保 token 是原始字符串，不被編碼
+          const cleanToken = data.accessToken.trim()
+          window.sessionStorage.setItem('auth-token', cleanToken)
+          console.log('🔐 Token stored in sessionStorage:', {
+            tokenPreview: `${cleanToken.substring(0, 20)}...`,
+            expiresIn: data.expiresIn,
+            tokenLength: cleanToken.length,
+            isValid: cleanToken.split('.').length === 3
+          })
         }
         
+        // Pinia 的 persist 會自動保存 accessToken
+        console.log('📦 Authentication state saved to Pinia store with persistence:', {
+          userId: this.userId,
+          isAuthenticated: this.isAuthenticated,
+          hasAccessToken: !!this.accessToken
+        })
+        
+        
         // Also set a cookie for server-side authentication checks
-        if (process.client) {
-          const sessionCookie = useCookie('session-token', {
+        if (process.client && typeof window !== 'undefined') {
+          const cleanToken = data.accessToken.trim()
+          const authCookie = useCookie('auth-token', {
             maxAge: data.expiresIn,
-            secure: true,
-            sameSite: 'strict'
+            secure: false, // Allow HTTP for localhost/Docker
+            sameSite: 'lax', // More permissive for Docker
+            httpOnly: false, // Allow JS access
+            encode: value => value, // 不編碼 - 保持原始值
+            decode: value => value  // 不解碼 - 保持原始值
           })
-          sessionCookie.value = data.accessToken
+          authCookie.value = cleanToken
+          console.log('🍪 Token stored in cookie:', {
+            tokenPreview: `${cleanToken.substring(0, 20)}...`,
+            tokenLength: cleanToken.length,
+            isValid: cleanToken.split('.').length === 3,
+            cookieOptions: {
+              maxAge: data.expiresIn,
+              secure: false,
+              sameSite: 'lax',
+              httpOnly: false
+            }
+          })
         }
         
         return data
@@ -152,6 +306,8 @@ export const useAuthStore = defineStore('auth', {
     
     // 覆寫登出方法以清理 SSO 相關資料
     logout() {
+      console.log('🚪 Logging out user, clearing all auth data')
+      
       this.user = null
       this.userProfile = null
       this.userId = null
@@ -163,23 +319,48 @@ export const useAuthStore = defineStore('auth', {
       this.sessionExpiry = null
       
       // Clear sessionStorage
-      if (process.client && window.sessionStorage) {
+      if (process.client && typeof window !== 'undefined' && window.sessionStorage) {
         window.sessionStorage.removeItem('auth-token')
+        console.log('🧹 Cleared auth-token from sessionStorage')
       }
       
-      // Clear session cookie
-      if (process.client) {
-        const sessionCookie = useCookie('session-token')
-        sessionCookie.value = null
+      // Clear auth cookie
+      if (process.client && typeof window !== 'undefined') {
+        const authCookie = useCookie('auth-token', {
+          secure: false,
+          sameSite: 'lax',
+          httpOnly: false,
+          encode: value => value, // 不編碼
+          decode: value => value  // 不解碼
+        })
+        authCookie.value = null
+        console.log('🍪 Cleared auth-token cookie')
       }
       
-      console.log('用戶已登出')
+      console.log('✅ User logged out - all auth data cleared')
     }
   },
 
-  // 持久化設定 - 僅在客戶端啟用
+  // 持久化設定 - 修復 SSR 兼容性
   persist: process.client ? {
-    storage: localStorage,
-    paths: ['user', 'isAuthenticated', 'loginTime', 'sessionExpiry', 'userProfile', 'userId', 'ssoProvider'] // 不包含 tokens
+    storage: {
+      getItem: (key: string) => {
+        if (typeof window !== 'undefined' && window.sessionStorage) {
+          return window.sessionStorage.getItem(key)
+        }
+        return null
+      },
+      setItem: (key: string, value: string) => {
+        if (typeof window !== 'undefined' && window.sessionStorage) {
+          window.sessionStorage.setItem(key, value)
+        }
+      },
+      removeItem: (key: string) => {
+        if (typeof window !== 'undefined' && window.sessionStorage) {
+          window.sessionStorage.removeItem(key)
+        }
+      }
+    },
+    paths: ['user', 'isAuthenticated', 'loginTime', 'sessionExpiry', 'userProfile', 'userId', 'ssoProvider', 'accessToken']
   } : false
 })

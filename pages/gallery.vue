@@ -11,31 +11,17 @@
           <span>共 {{ imageList.length }} 張照片</span>
         </div>
         <div class="actions" v-if="imageList.length > 0">
-          <div class="action-buttons">
-            <el-button 
-              type="success" 
-              :loading="exportingCsv" 
-              @click="exportApprovedMessages"
-              :disabled="exportingCsv"
-            >
-              <el-icon v-if="!exportingCsv">
-                <Document />
-              </el-icon>
-              {{ exportingCsv ? '匯出中...' : '匯出核准留言 (CSV)' }}
-            </el-button>
-            
-            <el-button 
-              type="primary" 
-              :loading="exportingImages" 
-              @click="exportApprovedImages"
-              :disabled="exportingImages"
-            >
-              <el-icon v-if="!exportingImages">
-                <Download />
-              </el-icon>
-              {{ exportingImages ? '打包中...' : '匯出核准圖片 (ZIP)' }}
-            </el-button>
-          </div>
+          <el-button 
+            type="primary" 
+            :loading="downloading" 
+            @click="downloadAllPhotos"
+            :disabled="downloading"
+          >
+            <el-icon v-if="!downloading">
+              <Download />
+            </el-icon>
+            {{ downloading ? '準備下載中...' : '下載所有照片 (ZIP)' }}
+          </el-button>
         </div>
       </div>
     </div>
@@ -74,14 +60,13 @@
 </template>
   
   <script setup lang="ts">
-  import { Picture, Download, Document } from '@element-plus/icons-vue'
+  import { Picture, Download } from '@element-plus/icons-vue'
   
   const imageList = ref<string[]>([])
   const previewVisible = ref(false)
   const selectedImage = ref('')
   const loading = ref(false)
-  const exportingCsv = ref(false)
-  const exportingImages = ref(false)
+  const downloading = ref(false)
   const { fetchMessages } = useApi()
 
   // 設定頁面 meta
@@ -110,58 +95,14 @@
     }
   }
 
-
-  async function exportApprovedMessages() {
-    if (exportingCsv.value) return
+  async function downloadAllPhotos() {
+    if (downloading.value) return
     
-    exportingCsv.value = true
+    downloading.value = true
     try {
-      ElMessage.info('正在匯出核准留言，請稍候...')
+      ElMessage.info('正在準備下載所有照片，請稍候...')
       
-      const response = await fetch('/api/export/messages-csv', {
-        method: 'GET',
-        headers: {
-          'Accept': 'text/csv'
-        }
-      })
-      
-      if (!response.ok) {
-        const errorText = await response.text()
-        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`)
-      }
-      
-      // 獲取檔案內容
-      const blob = await response.blob()
-      
-      // 創建下載連結
-      const url = window.URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `婚禮祝福留言_${new Date().toISOString().split('T')[0]}.csv`
-      document.body.appendChild(a)
-      a.click()
-      
-      // 清理
-      document.body.removeChild(a)
-      window.URL.revokeObjectURL(url)
-      
-      ElMessage.success('成功匯出核准留言 CSV 檔案！')
-    } catch (error) {
-      console.error('匯出 CSV 失敗:', error)
-      ElMessage.error('匯出失敗，請稍後再試')
-    } finally {
-      exportingCsv.value = false
-    }
-  }
-
-  async function exportApprovedImages() {
-    if (exportingImages.value) return
-    
-    exportingImages.value = true
-    try {
-      ElMessage.info('正在打包核准圖片，請稍候...')
-      
-      const response = await fetch('/api/export/images-zip', {
+      const response = await fetch('/api/download-all', {
         method: 'GET',
         headers: {
           'Accept': 'application/zip'
@@ -169,8 +110,7 @@
       })
       
       if (!response.ok) {
-        const errorText = await response.text()
-        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`)
+        throw new Error(`HTTP error! status: ${response.status}`)
       }
       
       // 獲取檔案內容
@@ -180,7 +120,7 @@
       const url = window.URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = `婚禮祝福照片_${new Date().toISOString().split('T')[0]}.zip`
+      a.download = `wedding-photos-${new Date().toISOString().split('T')[0]}.zip`
       document.body.appendChild(a)
       a.click()
       
@@ -188,12 +128,12 @@
       document.body.removeChild(a)
       window.URL.revokeObjectURL(url)
       
-      ElMessage.success('成功匯出核准圖片 ZIP 檔案！')
+      ElMessage.success(`成功下載 ${imageList.value.length} 張照片！`)
     } catch (error) {
-      console.error('匯出圖片 ZIP 失敗:', error)
-      ElMessage.error('匯出失敗，請稍後再試')
+      console.error('批量下載失敗:', error)
+      ElMessage.error('下載失敗，請稍後再試')
     } finally {
-      exportingImages.value = false
+      downloading.value = false
     }
   }
   
@@ -261,57 +201,24 @@
     margin-top: 1rem;
   }
 
-  .action-buttons {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 1rem;
-    justify-content: center;
-    align-items: center;
-  }
-
   .actions .el-button {
-    padding: 0.75rem 2rem;
+    background: linear-gradient(135deg, #67C23A 0%, #85CE61 100%);
+    border: none;
+    padding: 0.75rem 1.5rem;
     font-weight: 600;
     border-radius: 25px;
-    transition: all 0.3s ease;
-    border: none;
-    min-width: 220px;
-  }
-
-  .actions .el-button--primary {
-    background: linear-gradient(135deg, #409EFF 0%, #66B3FF 100%);
-    box-shadow: 0 4px 12px rgba(64, 158, 255, 0.3);
-  }
-
-  .actions .el-button--primary:hover:not(:disabled) {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(64, 158, 255, 0.4);
-  }
-
-  .actions .el-button--success {
-    background: linear-gradient(135deg, #67C23A 0%, #85CE61 100%);
     box-shadow: 0 4px 12px rgba(103, 194, 58, 0.3);
+    transition: all 0.3s ease;
   }
 
-  .actions .el-button--success:hover:not(:disabled) {
+  .actions .el-button:hover:not(:disabled) {
     transform: translateY(-2px);
     box-shadow: 0 6px 16px rgba(103, 194, 58, 0.4);
-  }
-
-  .actions .el-button--warning {
-    background: linear-gradient(135deg, #E6A23C 0%, #F2C55C 100%);
-    box-shadow: 0 4px 12px rgba(230, 162, 60, 0.3);
-  }
-
-  .actions .el-button--warning:hover:not(:disabled) {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(230, 162, 60, 0.4);
   }
 
   .actions .el-button:disabled {
     opacity: 0.7;
     cursor: not-allowed;
-    transform: none !important;
   }
 
   .gallery-content {
@@ -371,17 +278,6 @@
       font-size: 1.5rem;
     }
     
-    .action-buttons {
-      flex-direction: column;
-      gap: 0.75rem;
-    }
-    
-    .actions .el-button {
-      min-width: 200px;
-      width: 100%;
-      max-width: 280px;
-    }
-    
     .thumb {
       height: 150px;
     }
@@ -390,12 +286,6 @@
   @media (max-width: 480px) {
     .header-content {
       padding: 1rem;
-    }
-    
-    .actions .el-button {
-      min-width: unset;
-      padding: 0.65rem 1rem;
-      font-size: 0.9rem;
     }
     
     .thumb {

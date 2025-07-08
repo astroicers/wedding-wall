@@ -61,7 +61,7 @@ const props = defineProps<{
   progress?: number
 }>()
 
-const isLongText = computed(() => props.message.text.length > 60)
+const isLongText = computed(() => (props.message.text || '').length > 60)
 
 const progressWidth = computed(() => `${props.progress || 0}%`)
 

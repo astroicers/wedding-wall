@@ -6,6 +6,15 @@ import { Client } from 'minio'
 
 export default defineEventHandler(async (event) => {
   try {
+    // 檢查認證狀態
+    const authContext = event.context.auth
+    if (!authContext?.isAuthenticated) {
+      throw createError({
+        statusCode: 401,
+        statusMessage: '需要登入才能上傳'
+      })
+    }
+    
     const form = formidable({ keepExtensions: true, multiples: false })
 
     const { fields, files } = await new Promise<any>((resolve, reject) => {
@@ -19,6 +28,35 @@ export default defineEventHandler(async (event) => {
     const file = files.file[0]
     const name = fields.name?.[0] || '匿名'
     const text = fields.text?.[0] || ''
+    const wallId = fields.wallId?.[0] || ''
+
+    // 檢查 wallId 是否存在（多租戶支持）
+    if (!wallId.trim()) {
+      throw createError({
+        statusCode: 400,
+        statusMessage: '缺少祝福牆 ID'
+      })
+    }
+    
+    // 驗證用戶是否有權限上傳到這個牆
+    const userId = authContext.userId
+    try {
+      const minioClient = new Client({
+        endPoint: 'minio',
+        port: 9000,
+        useSSL: false,
+        accessKey: 'admin',
+        secretKey: 'admin123'
+      })
+      
+      const wallMetadataPath = `users/${userId}/walls/${wallId}/metadata.json`
+      await minioClient.statObject('wedding-wall', wallMetadataPath)
+    } catch (error) {
+      throw createError({
+        statusCode: 403,
+        statusMessage: '無權上傳到此祝福牆'
+      })
+    }
 
     if (!file.originalFilename) {
       throw createError({
@@ -52,7 +90,8 @@ export default defineEventHandler(async (event) => {
     }
 
     const fileBuffer = await readFile(file.filepath)
-    const filename = `${Date.now()}-${file.originalFilename}`
+    const timestamp = Date.now()
+    const filename = `${timestamp}-${file.originalFilename}`
 
     // 確保 bucket 存在
     await MinioService.ensureBucket('wedding-wall')
@@ -60,26 +99,33 @@ export default defineEventHandler(async (event) => {
     // 上傳圖片
     await MinioService.uploadFile(filename, fileBuffer, file.mimetype)
 
-    // 獲取管理員設定以決定審核狀態
-    const approvalStatus = await determineApprovalStatus(text)
+    // 獲取墻設定以決定審核狀態
+    const approvalStatus = await determineApprovalStatus(text, userId, wallId)
     
-    // 準備 metadata
+    // 準備 metadata（包含wallId）
     const metadata = {
+      id: `${timestamp}-${randomUUID()}`,
       name,
-      text,
-      photo: `/api/image/${encodeURIComponent(filename)}`,
-      timestamp: Date.now(),
+      message: text, // 改為 message 以符合前端期望
+      imagePath: filename, // 直接存儲文件名
+      wallId,
+      createdAt: timestamp,
       approved: approvalStatus
     }
 
-    // 上傳 metadata
-    const metadataFilename = `metadata/${Date.now()}-${randomUUID()}.json`
+    // 上傳 metadata（使用userId和wallId組織文件）
+    const metadataFilename = `users/${userId}/walls/${wallId}/messages/${metadata.id}.json`
     await MinioService.uploadJson(metadataFilename, metadata)
 
     return {
       success: true,
-      url: metadata.photo,
-      message: '上傳成功'
+      message: '上傳成功',
+      data: {
+        id: metadata.id,
+        imagePath: metadata.imagePath,
+        wallId: metadata.wallId,
+        approved: metadata.approved
+      }
     }
   } catch (error: any) {
     console.error('上傳錯誤:', error)
@@ -95,11 +141,11 @@ export default defineEventHandler(async (event) => {
   }
 })
 
-// 根據管理員設定決定審核狀態
-async function determineApprovalStatus(text: string): Promise<'approved' | 'pending' | 'rejected'> {
+// 根據墻設定決定審核狀態
+async function determineApprovalStatus(text: string, userId: string, wallId: string): Promise<'approved' | 'pending' | 'rejected'> {
   try {
-    // 獲取管理員設定
-    const settings = await getAdminSettings() as any
+    // 獲取墻設定
+    const settings = await getWallSettings(userId, wallId) as any
     
     // 檢查自動拒絕關鍵字
     if (settings.autoRejectKeywords) {
@@ -123,24 +169,24 @@ async function determineApprovalStatus(text: string): Promise<'approved' | 'pend
       }
     }
     
-    // 檢查全局自動審核設定
+    // 檢查墻的自動審核設定
     if (settings.autoApprove) {
-      console.log('全局自動審核已啟用，留言自動通過:', text)
+      console.log(`墻 ${wallId} 自動審核已啟用，留言自動通過:`, text)
       return 'approved'
     }
     
-    // 預設為待審核
-    console.log('留言待審核:', text)
-    return 'pending'
+    // 預設為自動通過（對用戶友好）
+    console.log(`墻 ${wallId} 沒有特殊設定，留言自動通過:`, text)
+    return 'approved'
     
   } catch (error) {
-    console.error('獲取審核設定失敗，使用預設待審核狀態:', error)
-    return 'pending'
+    console.error('獲取審核設定失敗，使用預設自動通過狀態:', error)
+    return 'approved'
   }
 }
 
-// 獲取管理員設定
-async function getAdminSettings() {
+// 獲取墻設定
+async function getWallSettings(userId: string, wallId: string) {
   try {
     const minioClient = new Client({
       endPoint: 'minio',
@@ -151,40 +197,47 @@ async function getAdminSettings() {
     })
 
     const bucketName = 'wedding-wall'
-    const settingsKey = 'admin-settings.json'
+    // 從墻的 metadata 中獲取設定
+    const metadataKey = `users/${userId}/walls/${wallId}/metadata.json`
 
-    const stream = await minioClient.getObject(bucketName, settingsKey)
+    const stream = await minioClient.getObject(bucketName, metadataKey)
     
     return new Promise((resolve) => {
-      let settingsData = ''
+      let metadataData = ''
       
       stream.on('data', (chunk) => {
-        settingsData += chunk.toString()
+        metadataData += chunk.toString()
       })
       
       stream.on('end', () => {
         try {
-          const settings = JSON.parse(settingsData)
-          resolve(settings)
+          const metadata = JSON.parse(metadataData)
+          // 返回墻的設定，如果沒有設定則使用預設值
+          resolve(metadata.settings || getDefaultWallSettings())
         } catch (error) {
-          resolve(getDefaultSettings())
+          resolve(getDefaultWallSettings())
         }
       })
       
       stream.on('error', () => {
-        resolve(getDefaultSettings())
+        resolve(getDefaultWallSettings())
       })
     })
   } catch (error) {
-    return getDefaultSettings()
+    return getDefaultWallSettings()
   }
 }
 
-function getDefaultSettings() {
+function getDefaultWallSettings() {
   return {
-    autoApprove: false,
+    displayMode: 'grid',
+    autoApprove: true, // 預設自動通過，對用戶友好
     showUnmoderated: false,
     autoApproveKeywords: '',
-    autoRejectKeywords: ''
+    autoRejectKeywords: '',
+    // 其他墻設定
+    fontFamily: 'default',
+    backgroundColor: '#ffffff',
+    textColor: '#333333'
   }
 }

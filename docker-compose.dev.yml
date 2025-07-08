@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  minio:
+    image: quay.io/minio/minio
+    container_name: wedding-wall-minio-dev
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: admin
+      MINIO_ROOT_PASSWORD: admin123
+    volumes:
+      - minio_data_dev:/data
+    command: server /data --console-address ":9001"
+    networks:
+      - wedding-wall-network-dev
+
+  wedding-wall-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: wedding-wall-app-dev
+    ports:
+      - "3000:3000"
+    environment:
+      NUXT_HOST: 0.0.0.0
+      MINIO_ENDPOINT: minio
+      MINIO_PORT: 9000
+      MINIO_USE_SSL: false
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-admin}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-admin123}
+      MINIO_BUCKET_NAME: ${MINIO_BUCKET_NAME:-wedding-wall}
+      # OAuth 環境變數
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+      JWT_SECRET: ${JWT_SECRET}
+      APP_URL: ${APP_URL:-http://localhost:3000}
+      AUTH_PROVIDER: ${AUTH_PROVIDER:-google}
+    volumes:
+      # 掛載整個專案目錄以支援熱重載
+      - .:/app
+      # 排除 node_modules 避免權限問題
+      - /app/node_modules
+    depends_on:
+      - minio
+    networks:
+      - wedding-wall-network-dev
+    restart: unless-stopped
+
+volumes:
+  minio_data_dev:
+    driver: local
+
+networks:
+  wedding-wall-network-dev:
+    driver: bridge

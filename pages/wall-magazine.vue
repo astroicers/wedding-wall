@@ -254,6 +254,7 @@ onMounted(async () => {
   color: #2c3e50;
   border-radius: 25px;
   cursor: pointer;
+  backdrop-filter: blur(10px);
   border: 1px solid rgba(44, 62, 80, 0.2);
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
   transition: all 0.3s ease;
@@ -297,6 +298,7 @@ onMounted(async () => {
   border-radius: 20px;
   font-size: 14px;
   font-weight: 500;
+  backdrop-filter: blur(10px);
   border: 1px solid rgba(44, 62, 80, 0.2);
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
@@ -322,6 +324,7 @@ onMounted(async () => {
   background: rgba(255, 255, 255, 0.9) !important;
   border: 1px solid rgba(44, 62, 80, 0.2) !important;
   color: #2c3e50 !important;
+  backdrop-filter: blur(10px);
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
 
@@ -363,6 +366,7 @@ onMounted(async () => {
   border-radius: 50% !important;
   margin-top: -25px !important;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1) !important;
+  backdrop-filter: blur(10px) !important;
   transition: all 0.3s ease !important;
 }
 

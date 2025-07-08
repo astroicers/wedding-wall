@@ -142,7 +142,9 @@ async function createOrUpdateUser(ssoUser: SSOUser, provider: string): Promise<U
 // JWT 生成函數
 function generateAccessToken(user: User): string {
   const config = useRuntimeConfig()
-  return jwt.sign(
+  console.log('🔑 Generating JWT with secret available:', !!config.jwtSecret, 'for user:', user.id)
+  
+  const token = jwt.sign(
     {
       sub: user.id,
       email: user.email,
@@ -151,6 +153,16 @@ function generateAccessToken(user: User): string {
     config.jwtSecret,
     { expiresIn: '1h' }
   )
+  
+  console.log('✅ JWT generated:', {
+    tokenPreview: `${token.substring(0, 20)}...`,
+    tokenLength: token.length,
+    userId: user.id,
+    secretLength: config.jwtSecret?.length || 0,
+    secretPreview: config.jwtSecret ? `${config.jwtSecret.substring(0, 16)}...` : 'null'
+  })
+  
+  return token
 }
 
 function generateRefreshToken(user: User): string {

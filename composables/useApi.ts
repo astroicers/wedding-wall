@@ -12,7 +12,8 @@ export const useApi = () => {
   
   const apiRequest = async <T>(url: string, options?: RequestInit): Promise<T> => {
     try {
-      const response = await fetch(url, options)
+      const authenticatedFetch = useAuthenticatedFetch()
+      const response = await authenticatedFetch.raw(url, options)
       
       if (!response.ok) {
         let errorMessage = 'API 請求失敗'
@@ -45,10 +46,17 @@ export const useApi = () => {
   }
 
   const uploadMessage = async (formData: FormData): Promise<UploadResult> => {
-    return apiRequest<UploadResult>('/api/upload', {
-      method: 'POST',
-      body: formData
-    })
+    try {
+      const authenticatedFetch = useAuthenticatedFetch()
+      const response = await authenticatedFetch('/api/upload', {
+        method: 'POST',
+        body: formData
+      })
+      return response
+    } catch (error) {
+      console.error('Upload error:', error)
+      throw error
+    }
   }
 
   return {

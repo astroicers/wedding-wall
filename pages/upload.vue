@@ -1,94 +1,184 @@
 <template>
   <div class="upload-page">
-    <div class="container">
-      <div class="header">
-        <el-icon size="48" color="#409EFF">
-          <Upload />
-        </el-icon>
-        <h2>📸 上傳祝福</h2>
-        <p>分享您的照片和美好祝願</p>
-      </div>
+    <!-- Header -->
+    <div class="upload-header">
+      <el-button 
+        @click="navigateBack" 
+        :icon="ArrowLeft" 
+        type="primary" 
+        plain
+        class="back-button"
+      >
+        返回祝福墻
+      </el-button>
       
-      <div class="form-container">
-        <UploadForm />
+      <h1 class="upload-title">上傳祝福</h1>
+      
+      <div v-if="currentWall" class="wall-info">
+        <span class="wall-name">{{ currentWall.name }}</span>
+        <el-tag type="success">{{ currentWall.settings.displayMode }}</el-tag>
       </div>
+    </div>
+
+    <!-- Upload Form -->
+    <div class="upload-content">
+      <UploadForm 
+        :wall-id="wallId" 
+        @upload-success="handleUploadSuccess"
+      />
     </div>
   </div>
 </template>
 
-<script setup lang="ts">
-import UploadForm from '~/components/UploadForm.vue'
-import { Upload } from '@element-plus/icons-vue'
+<script setup>
+import { ArrowLeft } from '@element-plus/icons-vue'
+import { useRoute, useRouter } from 'vue-router'
+import { useWallsStore } from '~/stores/walls'
+import { useAuthStore } from '~/stores/auth'
 
-const auth = useAuth()
+const route = useRoute()
+const router = useRouter()
+const wallsStore = useWallsStore()
+const authStore = useAuthStore()
 
-// 設定頁面 meta
-useHead({
-  title: '上傳祝福 - 婚禮祝福牆',
-  meta: [
-    { name: 'description', content: '上傳您的照片和祝福訊息，與新人分享這個特別的時刻！' }
-  ]
+// 從查詢參數獲取 wallId
+const wallId = computed(() => route.query.wallId)
+const currentWall = ref(null)
+const loading = ref(true)
+
+// 頁面初始化
+onMounted(async () => {
+  console.log('Upload page mounted:', {
+    wallId: wallId.value,
+    query: route.query,
+    isAuthenticated: authStore.isAuthenticated
+  })
+
+  try {
+    // 檢查認證
+    if (!authStore.isAuthenticated) {
+      const sessionRestored = authStore.restoreSession()
+      if (!sessionRestored) {
+        router.push('/auth/login')
+        return
+      }
+    }
+
+    // 檢查是否有 wallId
+    if (!wallId.value) {
+      ElMessage.error('缺少祝福墻 ID')
+      router.push(`/${authStore.userId}/walls`)
+      return
+    }
+
+    // 獲取墻列表以查找當前墻
+    await wallsStore.fetchUserWalls(authStore.userId)
+    currentWall.value = wallsStore.walls.find(w => w.id === wallId.value)
+
+    if (!currentWall.value) {
+      ElMessage.error('找不到指定的祝福墻')
+      router.push(`/${authStore.userId}/walls`)
+      return
+    }
+
+    // 檢查用戶權限
+    if (currentWall.value.userId !== authStore.userId) {
+      ElMessage.error('無權上傳到此祝福墻')
+      router.push(`/${authStore.userId}/walls`)
+      return
+    }
+
+  } catch (error) {
+    console.error('Failed to load upload page:', error)
+    ElMessage.error('載入失敗')
+    router.push(`/${authStore.userId}/walls`)
+  } finally {
+    loading.value = false
+  }
 })
 
-// 移除登入檢查，允許任何人訪問上傳頁面
+// 返回到祝福墻
+const navigateBack = (shouldRefresh = false) => {
+  if (currentWall.value) {
+    const query = shouldRefresh ? { refresh: 'true' } : {}
+    router.push({ path: `/${authStore.userId}/walls/${wallId.value}`, query })
+  } else {
+    router.push(`/${authStore.userId}/walls`)
+  }
+}
+
+// 處理上傳成功
+const handleUploadSuccess = () => {
+  ElMessage.success('上傳成功！')
+  // 返回到祝福墻頁面並刷新數據
+  setTimeout(() => {
+    navigateBack(true) // 傳入 true 以觸發數據刷新
+  }, 1500)
+}
 </script>
 
 <style scoped>
 .upload-page {
-  min-height: calc(100vh - 80px);
-  padding: 2rem 1rem;
+  min-height: 100vh;
+  background: #f5f5f5;
 }
 
-.container {
-  max-width: 600px;
+.upload-header {
+  background: white;
+  padding: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.back-button {
+  margin-bottom: 15px;
+}
+
+.upload-title {
+  font-size: 28px;
+  margin: 0 0 10px 0;
+  color: #333;
+}
+
+.wall-info {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  color: #666;
+  font-size: 14px;
+}
+
+.wall-name {
+  font-weight: 500;
+  color: #333;
+}
+
+.upload-content {
+  padding: 20px;
+  max-width: 800px;
   margin: 0 auto;
 }
 
-.header {
-  text-align: center;
-  margin-bottom: 2rem;
-  padding: 2rem;
-  background: rgba(255, 255, 255, 0.9);
-  border-radius: 16px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-}
-
-.header h2 {
-  margin: 1rem 0 0.5rem 0;
-  color: #2c3e50;
-  font-size: 1.8rem;
-  font-weight: 600;
-}
-
-.header p {
-  margin: 0;
-  color: #7f8c8d;
-  font-size: 1rem;
-}
-
-.form-container {
-  background: rgba(255, 255, 255, 0.95);
-  border-radius: 16px;
-  padding: 2rem;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-}
-
+/* Responsive Design */
 @media (max-width: 768px) {
-  .upload-page {
-    padding: 1rem 0.5rem;
+  .upload-header {
+    padding: 15px;
   }
   
-  .header {
-    padding: 1.5rem;
-    margin-bottom: 1.5rem;
+  .upload-title {
+    font-size: 20px;
   }
   
-  .header h2 {
-    font-size: 1.5rem;
+  .upload-content {
+    padding: 15px;
   }
   
-  .form-container {
-    padding: 1.5rem;
+  .wall-info {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
   }
 }
 </style>

@@ -45,7 +45,7 @@ const props = defineProps<{
   }
 }>()
 
-const isLongText = computed(() => props.message.text.length > 80)
+const isLongText = computed(() => (props.message.text || '').length > 80)
 
 const issueNumber = computed(() => {
   if (props.message.timestamp) {
