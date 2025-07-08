@@ -53,6 +53,17 @@
   import { ref } from 'vue'
   import { ElMessage } from 'element-plus'
   
+  // Props
+  const props = defineProps({
+    wallId: {
+      type: String,
+      required: true
+    }
+  })
+  
+  // Emits
+  const emit = defineEmits(['upload-success'])
+  
   const name = ref('')
   const text = ref('')
   const file = ref<File | null>(null)
@@ -120,8 +131,9 @@
       formData.append('file', file.value)
       formData.append('name', name.value.trim())
       formData.append('text', text.value)
-
-      await uploadMessage(formData)
+      formData.append('wallId', props.wallId) // 添加 wallId
+      
+      const response = await uploadMessage(formData)
       
       ElMessage.success('祝福已送出！')
       
@@ -131,8 +143,8 @@
       file.value = null
       previewUrl.value = ''
       
-      // 返回首頁
-      await navigateTo('/')
+      // 發出上傳成功事件
+      emit('upload-success', response)
     } catch (error) {
       ElMessage.error('上傳失敗，請重試')
       console.error('上傳錯誤:', error)

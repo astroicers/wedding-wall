@@ -41,8 +41,37 @@ const authStore = useAuthStore()
 const loading = ref(false)
 const errorMessage = ref('')
 
-// 檢查是否有錯誤參數
-onMounted(() => {
+// 檢查是否有錯誤參數和已登入狀態
+onMounted(async () => {
+  console.log('🔐 Login page mounted, checking authentication status...')
+  
+  // 等待 app.vue 中的會話恢復完成
+  await nextTick()
+  let waitCount = 0
+  while (!window.__SESSION_RESTORE_COMPLETED && waitCount < 20) {
+    await new Promise(resolve => setTimeout(resolve, 50))
+    waitCount++
+  }
+  
+  // 檢查 app.vue 恢復的會話狀態
+  const sessionRestored = authStore.isAuthenticated && authStore.userId && authStore.isSessionValid
+  
+  console.log('🔐 Login page session check:', {
+    restored: sessionRestored,
+    isAuthenticated: authStore.isAuthenticated,
+    userId: authStore.userId,
+    hasToken: !!authStore.accessToken,
+    isSessionValid: authStore.isSessionValid
+  })
+  
+  // 如果已經登入，重定向到用戶的祝福牆列表
+  if (sessionRestored && authStore.isAuthenticated && authStore.userId && authStore.isSessionValid) {
+    console.log('✅ User already authenticated, redirecting to walls list...')
+    router.push(`/${authStore.userId}/walls`)
+    return
+  }
+  
+  // 檢查是否有錯誤參數
   if (route.query.error === 'auth_failed') {
     errorMessage.value = '登入失敗，請重試'
   }

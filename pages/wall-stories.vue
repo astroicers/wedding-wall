@@ -253,6 +253,7 @@ onMounted(async () => {
   color: white;
   border-radius: 25px;
   cursor: pointer;
+  backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.2);
   transition: all 0.3s ease;
 }
@@ -365,6 +366,7 @@ onMounted(async () => {
   background: rgba(0, 0, 0, 0.7) !important;
   border: 1px solid rgba(255, 255, 255, 0.3) !important;
   color: white !important;
+  backdrop-filter: blur(10px);
 }
 
 .stories-controls .el-button:hover {

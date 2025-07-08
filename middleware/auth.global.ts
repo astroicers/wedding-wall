@@ -9,8 +9,19 @@ export default defineNuxtRouteMiddleware((to) => {
   if (import.meta.client) {
     const authStore = useAuthStore()
     
+    console.log('🔐 Auth middleware check for route:', to.path)
+    console.log('🔐 Auth state:', {
+      isAuthenticated: authStore.isAuthenticated,
+      userId: authStore.userId,
+      sessionExpiry: authStore.sessionExpiry,
+      currentTime: Date.now(),
+      sessionValid: authStore.sessionExpiry ? Date.now() < authStore.sessionExpiry : false
+    })
+    
     // Check if user is authenticated and session is valid
     if (!authStore.isAuthenticated || !authStore.sessionExpiry || Date.now() > authStore.sessionExpiry) {
+      console.log('❌ Auth check failed, redirecting to login')
+      
       // Clear auth state
       authStore.$patch({
         user: null,
@@ -31,5 +42,7 @@ export default defineNuxtRouteMiddleware((to) => {
       
       return navigateTo('/auth/login')
     }
+    
+    console.log('✅ Auth check passed')
   }
 })

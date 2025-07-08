@@ -173,13 +173,14 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   z-index: 3;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
 
-/* 主照片 - 居中，左右貼齊卡片，完全不透明 */
+/* 主照片 - 居中，完整顯示，不裁切 */
 .photo-main {
   width: 100%;
   height: 100%;
-  background-size: cover;
+  background-size: contain;
   background-position: center center;
   background-repeat: no-repeat;
   opacity: 1;

@@ -1,0 +1,21 @@
+FROM node:18-alpine
+
+WORKDIR /app
+
+# 複製 package.json 檔案
+COPY package*.json ./
+
+# 安裝依賴，包括開發依賴
+RUN npm ci --legacy-peer-deps && npm cache clean --force
+
+# 複製專案檔案
+COPY . .
+
+# 清理可能的構建檔案
+RUN rm -rf .output .nuxt
+
+# 暴露連接埠
+EXPOSE 3000
+
+# 使用開發模式啟動 (支援熱重載)
+CMD ["sh", "-c", "rm -rf .output .nuxt && npm run dev -- --host 0.0.0.0"]

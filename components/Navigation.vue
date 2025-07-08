@@ -27,15 +27,15 @@
           </el-button>
           <el-button 
             text 
-            :class="{ active: $route.path === '/wall' }"
-            @click="navigateTo('/wall')"
+            :class="{ active: $route.path.includes('/walls') }"
+            @click="navigateToWalls"
           >
-            祝福牆
+            我的祝福牆
           </el-button>
           <el-button 
             text 
-            :class="{ active: $route.path === '/gallery' }"
-            @click="navigateTo('/gallery')"
+            :class="{ active: $route.path.includes('/gallery') }"
+            @click="navigateToGallery"
           >
             相簿
           </el-button>
@@ -47,6 +47,29 @@
 
 <script setup lang="ts">
 import { Star } from '@element-plus/icons-vue'
+import { useAuthStore } from '~/stores/auth'
+
+const authStore = useAuthStore()
+
+// 導航到我的祝福牆
+const navigateToWalls = () => {
+  if (authStore.isAuthenticated && authStore.userId) {
+    navigateTo(`/${authStore.userId}/walls`)
+  } else {
+    navigateTo('/auth/login')
+  }
+}
+
+// 導航到相簿
+const navigateToGallery = () => {
+  if (authStore.isAuthenticated && authStore.userId) {
+    // 如果用戶只有一個墻，直接導航到該墻的相簿
+    // 否則導航到墻列表讓用戶選擇
+    navigateTo(`/${authStore.userId}/walls`)
+  } else {
+    navigateTo('/auth/login')
+  }
+}
 </script>
 
 <style scoped>
