@@ -89,7 +89,7 @@ const swiperInstance = ref(null)
 const currentIndex = ref(0)
 
 const autoplayConfig = computed(() => ({
-  delay: 4000,
+  delay: (props.wallSettings.autoplayDelay || 4) * 1000,
   disableOnInteraction: false,
   pauseOnMouseEnter: true,
 }))

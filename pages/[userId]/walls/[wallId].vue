@@ -1060,9 +1060,14 @@ const saveWallSettings = async () => {
           showUnmoderated: wall.value.settings.showUnmoderated,
           autoApproveKeywords: wall.value.settings.autoApproveKeywords,
           autoRejectKeywords: wall.value.settings.autoRejectKeywords,
+          autoplayDelay: wall.value.settings.autoplayDelay,
+          imageExtraDelay: wall.value.settings.imageExtraDelay,
+          wallTitle: wall.value.settings.wallTitle,
+          wallSubtitle: wall.value.settings.wallSubtitle,
           backgroundColor: wall.value.settings.backgroundColor,
           textColor: wall.value.settings.textColor,
-          fontFamily: wall.value.settings.fontFamily
+          fontFamily: wall.value.settings.fontFamily,
+          fontSize: wall.value.settings.fontSize
         }
       }
     })

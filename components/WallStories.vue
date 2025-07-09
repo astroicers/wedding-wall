@@ -138,7 +138,7 @@ const backgroundStyle = computed(() => {
 
 const currentMessage = computed(() => props.messages[currentIndex.value] || {})
 
-const STORY_DURATION = 5000 // 5 seconds per story
+const STORY_DURATION = computed(() => (props.wallSettings.autoplayDelay || 4) * 1000) // Use dynamic autoplay delay
 
 // Start progress animation
 const startProgress = () => {
@@ -147,7 +147,7 @@ const startProgress = () => {
   
   if (isPlaying.value) {
     progressTimer.value = setInterval(() => {
-      progress.value += 100 / (STORY_DURATION / 100)
+      progress.value += 100 / (STORY_DURATION.value / 100)
       
       if (progress.value >= 100) {
         nextStory()

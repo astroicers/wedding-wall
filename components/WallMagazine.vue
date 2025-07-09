@@ -190,7 +190,7 @@ onMounted(() => {
   if (props.messages.length > 0) {
     const interval = setInterval(() => {
       currentIndex.value = (currentIndex.value + 1) % props.messages.length
-    }, 6000) // 每6秒切換
+    }, (props.wallSettings.autoplayDelay || 4) * 1000) // 使用設定的自動播放間隔
     
     onUnmounted(() => {
       clearInterval(interval)

@@ -109,12 +109,12 @@ onMounted(() => {
     loadFont(props.wallSettings.fontFamily)
   }
   
-  // 每3秒切換到下一則訊息
+  // 根據設定切換到下一則訊息
   const interval = setInterval(() => {
     if (props.messages.length > 0) {
       current.value = (current.value + 1) % props.messages.length
     }
-  }, 3000)
+  }, (props.wallSettings.autoplayDelay || 4) * 1000)
   
   onUnmounted(() => {
     clearInterval(interval)

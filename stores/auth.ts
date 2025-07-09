@@ -144,7 +144,15 @@ export const useAuthStore = defineStore('auth', {
                 processedPreview: payloadPart.substring(0, 20) + '...'
               })
               
-              const payload = JSON.parse(atob(payloadPart))
+              // 使用 TextDecoder 正確解碼 UTF-8 字符
+              const binaryString = atob(payloadPart)
+              const bytes = new Uint8Array(binaryString.length)
+              for (let i = 0; i < binaryString.length; i++) {
+                bytes[i] = binaryString.charCodeAt(i)
+              }
+              const decoder = new TextDecoder('utf-8')
+              const decodedString = decoder.decode(bytes)
+              const payload = JSON.parse(decodedString)
               console.log('📄 Token payload:', {
                 sub: payload.sub,
                 email: payload.email,
@@ -160,7 +168,8 @@ export const useAuthStore = defineStore('auth', {
                 this.userProfile = {
                   id: payload.sub,
                   email: payload.email,
-                  name: payload.name || payload.email
+                  name: payload.name || payload.email,
+                  picture: payload.picture
                 }
                 this.accessToken = cleanToken // 使用清理後的 token
                 this.isAuthenticated = true

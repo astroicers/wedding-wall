@@ -4,14 +4,18 @@
       <!-- 用戶資訊 -->
       <div class="user-header">
         <img 
-          v-if="authStore.userProfile?.picture" 
-          :src="authStore.userProfile.picture" 
-          :alt="authStore.userProfile.name"
+          v-if="userDisplayInfo.picture && !avatarError" 
+          :src="userDisplayInfo.picture" 
+          :alt="userDisplayInfo.name"
           class="user-avatar"
+          @error="handleAvatarError"
         >
+        <div v-else class="user-avatar-placeholder">
+          <el-icon size="32"><User /></el-icon>
+        </div>
         <div class="user-info">
-          <h1>{{ authStore.userProfile?.name || '用戶' }}的祝福牆</h1>
-          <p>{{ authStore.userProfile?.email }}</p>
+          <h1>{{ userDisplayInfo.name }}的祝福牆</h1>
+          <p>{{ userDisplayInfo.email }}</p>
         </div>
         <div class="header-actions">
           <el-button type="primary" @click="showCreateDialog = true" :loading="wallsStore.loading">
@@ -122,7 +126,8 @@ import {
   MoreFilled, 
   Message, 
   Calendar, 
-  ArrowRight 
+  ArrowRight,
+  User
 } from '@element-plus/icons-vue'
 import type { Wall } from '~/types/wall'
 import CreateWallDialog from '~/components/CreateWallDialog.vue'
@@ -134,23 +139,95 @@ const wallsStore = useWallsStore()
 
 const userId = route.params.userId as string
 const showCreateDialog = ref(false)
+const avatarError = ref(false)
 
 // 計算屬性
 const walls = computed(() => wallsStore.getUserWalls(userId))
 
+// 用戶顯示信息 - 處理編碼問題和提供安全的回退值
+const userDisplayInfo = computed(() => {
+  const profile = authStore.userProfile
+  const isAuthenticated = authStore.isAuthenticated
+  
+  console.log('🔍 Computing userDisplayInfo:', {
+    hasProfile: !!profile,
+    isAuthenticated,
+    profileKeys: profile ? Object.keys(profile) : [],
+    name: profile?.name,
+    email: profile?.email,
+    picture: profile?.picture
+  })
+  
+  // 如果沒有用戶資料或未認證，顯示載入狀態
+  if (!profile || !isAuthenticated) {
+    return {
+      name: '載入中',
+      email: '正在載入用戶資料...',
+      picture: null
+    }
+  }
+  
+  // 確保文字正確編碼，防止亂碼
+  const safeName = profile.name ? String(profile.name).trim() : '用戶'
+  const safeEmail = profile.email ? String(profile.email).trim() : ''
+  
+  // 為 Google 頭像添加代理
+  let avatarUrl = profile.picture || null
+  if (avatarUrl && avatarUrl.includes('googleusercontent.com')) {
+    avatarUrl = `/api/proxy/avatar?url=${encodeURIComponent(avatarUrl)}`
+  }
+  
+  const result = {
+    name: safeName || '用戶',
+    email: safeEmail || '未提供郵箱',
+    picture: avatarUrl
+  }
+  
+  console.log('✅ User display info computed:', result)
+  return result
+})
+
+// 監聽用戶變化，重置頭像錯誤狀態
+watch(() => userDisplayInfo.value.picture, () => {
+  avatarError.value = false
+})
+
 // 載入用戶的祝福牆（包含認證檢查）
 onMounted(async () => {
   try {
+    console.log('🎯 Walls page mounted, starting authentication check...')
+    
     // 確保認證狀態已恢復
-    authStore.restoreSession()
+    const sessionRestored = authStore.restoreSession()
+    console.log('🔄 Session restoration result:', sessionRestored)
+    
+    // 等待一個 tick 讓響應式系統更新
+    await nextTick()
+    
+    // 再次檢查認證狀態，考慮到 Pinia 持久化可能需要時間
+    let authCheckCount = 0
+    const maxAuthChecks = 10
+    
+    while ((!authStore.isAuthenticated || !authStore.userId) && authCheckCount < maxAuthChecks) {
+      console.log(`🔍 Auth check ${authCheckCount + 1}/${maxAuthChecks}:`, {
+        isAuthenticated: authStore.isAuthenticated,
+        userId: authStore.userId,
+        userProfile: !!authStore.userProfile,
+        accessToken: !!authStore.accessToken
+      })
+      
+      await new Promise(resolve => setTimeout(resolve, 100))
+      authCheckCount++
+    }
     
     // 驗證用戶是否已登入且 userId 匹配
     if (!authStore.isAuthenticated || authStore.userId !== userId) {
-      console.error('Authentication failed:', {
+      console.error('❌ Authentication failed after retries:', {
         isAuthenticated: authStore.isAuthenticated,
         storeUserId: authStore.userId,
         routeUserId: userId,
-        hasAccessToken: !!authStore.accessToken
+        hasAccessToken: !!authStore.accessToken,
+        userProfile: authStore.userProfile
       })
       
       // 跳轉到登入頁
@@ -158,15 +235,16 @@ onMounted(async () => {
       return
     }
     
-    console.log('Authentication success:', {
+    console.log('✅ Authentication success:', {
       isAuthenticated: authStore.isAuthenticated,
-      userId: authStore.userId
+      userId: authStore.userId,
+      userProfile: authStore.userProfile
     })
     
     // 載入牆列表
     await wallsStore.fetchUserWalls(userId)
   } catch (error) {
-    console.error('Failed to load walls:', error)
+    console.error('❌ Failed to load walls:', error)
   }
 })
 
@@ -239,6 +317,13 @@ function formatDate(timestamp: number): string {
   return new Date(timestamp).toLocaleDateString('zh-TW')
 }
 
+// 處理頭像載入錯誤
+function handleAvatarError(event: Event) {
+  console.warn('Avatar failed to load:', userDisplayInfo.value.picture)
+  // 設置錯誤狀態，這會觸發顯示占位符
+  avatarError.value = true
+}
+
 // 登出
 async function logout() {
   try {
@@ -286,6 +371,18 @@ useHead({
   height: 80px;
   border-radius: 50%;
   object-fit: cover;
+}
+
+.user-avatar-placeholder {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
 }
 
 .user-info h1 {

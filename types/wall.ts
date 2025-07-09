@@ -10,6 +10,11 @@ export interface WallSettings {
   requirePassword: boolean
   password?: string
   textColor: string
+  autoplayDelay: number // 留言切換時間（秒）
+  imageExtraDelay: number // 有圖片的留言額外時間（秒）
+  wallTitle: string // 墻標題
+  wallSubtitle: string // 墻副標題
+  fontSize: number // 字體大小（px）
 }
 
 export interface Wall {
@@ -44,7 +49,12 @@ export const defaultWallSettings: WallSettings = {
   autoApproveKeywords: '',
   autoRejectKeywords: '',
   requirePassword: false,
-  textColor: '#333333'
+  textColor: '#333333',
+  autoplayDelay: 4, // 預設4秒切換
+  imageExtraDelay: 1, // 有圖片的留言額外1秒
+  wallTitle: '', // 預設使用墻名稱
+  wallSubtitle: '', // 預設無副標題
+  fontSize: 48 // 預設字體大小48px
 }
 
 // Helper function to generate URL-friendly slug

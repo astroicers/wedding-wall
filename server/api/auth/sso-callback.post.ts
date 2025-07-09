@@ -144,11 +144,13 @@ function generateAccessToken(user: User): string {
   const config = useRuntimeConfig()
   console.log('🔑 Generating JWT with secret available:', !!config.jwtSecret, 'for user:', user.id)
   
+  // 確保所有字符串都是正確的 UTF-8 編碼
   const token = jwt.sign(
     {
       sub: user.id,
       email: user.email,
-      name: user.name
+      name: user.name ? Buffer.from(user.name, 'utf8').toString('utf8') : user.name,
+      picture: user.picture
     },
     config.jwtSecret,
     { expiresIn: '1h' }

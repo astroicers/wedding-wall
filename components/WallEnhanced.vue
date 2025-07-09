@@ -177,7 +177,7 @@ const currentEffect = ref('coverflow')
 
 // 自动播放配置
 const autoplayConfig = computed(() => ({
-  delay: 4000,
+  delay: (props.wallSettings.autoplayDelay || 4) * 1000,
   disableOnInteraction: false,
   pauseOnMouseEnter: false
 }))
