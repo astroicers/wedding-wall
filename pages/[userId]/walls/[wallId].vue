@@ -267,6 +267,17 @@
               <el-input v-model="wall.name" />
             </el-form-item>
             
+            <el-form-item label="描述">
+              <el-input
+                v-model="wall.description"
+                type="textarea"
+                placeholder="請輸入祝福牆描述 (可選)"
+                :rows="3"
+                maxlength="200"
+                show-word-limit
+              />
+            </el-form-item>
+            
             <el-divider content-position="left">背景設定</el-divider>
             
             <el-form-item label="背景圖片">
@@ -331,16 +342,6 @@
               <div class="form-tip">背景圖片會顯示在所有祝福墻模式中</div>
             </el-form-item>
             
-            <el-form-item label="顯示模式">
-              <el-select v-model="wall.settings.displayMode">
-                <el-option label="經典" value="default" />
-                <el-option label="網格" value="grid" />
-                <el-option label="拍立得" value="polaroid" />
-                <el-option label="雜誌" value="magazine" />
-                <el-option label="故事" value="stories" />
-                <el-option label="增強" value="enhanced" />
-              </el-select>
-            </el-form-item>
             
             <el-form-item label="牆狀態">
               <el-switch 
@@ -391,32 +392,34 @@
             <el-divider content-position="left">播放設定</el-divider>
             
             <el-form-item label="切換時間">
-              <div class="time-setting-group">
-                <el-slider 
-                  v-model="wall.settings.autoplayDelay" 
-                  :min="2" 
-                  :max="15" 
-                  :step="1"
-                  show-stops
-                  style="flex: 1;"
-                />
-                <span class="time-value">{{ wall.settings.autoplayDelay || 4 }} 秒</span>
-              </div>
+              <el-select v-model="wall.settings.autoplayDelay" placeholder="選擇時間" style="width: 200px;">
+                <el-option label="2秒" :value="2" />
+                <el-option label="3秒" :value="3" />
+                <el-option label="4秒" :value="4" />
+                <el-option label="5秒" :value="5" />
+                <el-option label="6秒" :value="6" />
+                <el-option label="7秒" :value="7" />
+                <el-option label="8秒" :value="8" />
+                <el-option label="9秒" :value="9" />
+                <el-option label="10秒" :value="10" />
+                <el-option label="12秒" :value="12" />
+                <el-option label="15秒" :value="15" />
+              </el-select>
               <div class="form-tip">控制留言在祝福墻上的顯示時間</div>
             </el-form-item>
             
             <el-form-item label="圖片額外時間">
-              <div class="time-setting-group">
-                <el-slider 
-                  v-model="wall.settings.imageExtraDelay" 
-                  :min="0" 
-                  :max="5" 
-                  :step="0.5"
-                  show-stops
-                  style="flex: 1;"
-                />
-                <span class="time-value">+{{ wall.settings.imageExtraDelay || 1 }} 秒</span>
-              </div>
+              <el-select v-model="wall.settings.imageExtraDelay" placeholder="選擇時間" style="width: 200px;">
+                <el-option label="0秒" :value="0" />
+                <el-option label="0.5秒" :value="0.5" />
+                <el-option label="1秒" :value="1" />
+                <el-option label="1.5秒" :value="1.5" />
+                <el-option label="2秒" :value="2" />
+                <el-option label="2.5秒" :value="2.5" />
+                <el-option label="3秒" :value="3" />
+                <el-option label="4秒" :value="4" />
+                <el-option label="5秒" :value="5" />
+              </el-select>
               <div class="form-tip">有照片的留言會額外增加顯示時間</div>
             </el-form-item>
             
@@ -446,17 +449,21 @@
             </el-form-item>
             
             <el-form-item label="字體大小">
-              <div class="time-setting-group">
-                <el-slider 
-                  v-model="wall.settings.fontSize" 
-                  :min="24" 
-                  :max="72" 
-                  :step="4"
-                  show-stops
-                  style="flex: 1;"
-                />
-                <span class="time-value">{{ wall.settings.fontSize || 48 }}px</span>
-              </div>
+              <el-select v-model="wall.settings.fontSize" placeholder="選擇字體大小" style="width: 200px;">
+                <el-option label="24px" :value="24" />
+                <el-option label="28px" :value="28" />
+                <el-option label="32px" :value="32" />
+                <el-option label="36px" :value="36" />
+                <el-option label="40px" :value="40" />
+                <el-option label="44px" :value="44" />
+                <el-option label="48px" :value="48" />
+                <el-option label="52px" :value="52" />
+                <el-option label="56px" :value="56" />
+                <el-option label="60px" :value="60" />
+                <el-option label="64px" :value="64" />
+                <el-option label="68px" :value="68" />
+                <el-option label="72px" :value="72" />
+              </el-select>
             </el-form-item>
             
             <el-form-item label="字體">
@@ -1052,7 +1059,7 @@ const saveWallSettings = async () => {
       method: 'PUT',
       body: {
         name: wall.value.name,
-        displayMode: wall.value.settings.displayMode,
+        description: wall.value.description,
         isActive: wall.value.isActive,
         settings: {
           ...wall.value.settings,

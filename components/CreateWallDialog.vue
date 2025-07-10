@@ -33,34 +33,6 @@
         />
       </el-form-item>
 
-      <el-form-item label="主題風格" prop="theme">
-        <el-select v-model="form.settings.theme" placeholder="選擇主題風格" style="width: 100%">
-          <el-option value="default" label="預設風格">
-            <div class="theme-option">
-              <span class="theme-indicator theme-default"></span>
-              <span>預設風格</span>
-            </div>
-          </el-option>
-          <el-option value="polaroid" label="拍立得風格">
-            <div class="theme-option">
-              <span class="theme-indicator theme-polaroid"></span>
-              <span>拍立得風格</span>
-            </div>
-          </el-option>
-          <el-option value="instagram" label="Instagram風格">
-            <div class="theme-option">
-              <span class="theme-indicator theme-instagram"></span>
-              <span>Instagram風格</span>
-            </div>
-          </el-option>
-          <el-option value="magazine" label="雜誌風格">
-            <div class="theme-option">
-              <span class="theme-indicator theme-magazine"></span>
-              <span>雜誌風格</span>
-            </div>
-          </el-option>
-        </el-select>
-      </el-form-item>
 
       <el-form-item label="背景顏色" prop="backgroundColor">
         <el-color-picker v-model="form.settings.backgroundColor" show-alpha />
@@ -160,12 +132,22 @@ const form = ref<CreateWallData & { isPublic: boolean; settings: WallSettings }>
   description: '',
   isPublic: true,
   settings: {
+    displayMode: 'grid',
     theme: 'default',
     backgroundColor: '#ffffff',
     fontFamily: 'Microsoft JhengHei',
     autoApprove: true,
+    showUnmoderated: false,
+    autoApproveKeywords: '',
+    autoRejectKeywords: '',
     requirePassword: false,
-    password: ''
+    password: '',
+    textColor: '#333333',
+    autoplayDelay: 4,
+    imageExtraDelay: 1,
+    wallTitle: '',
+    wallSubtitle: '',
+    fontSize: 48
   }
 })
 
@@ -192,12 +174,22 @@ function resetForm() {
     description: '',
     isPublic: true,
     settings: {
+      displayMode: 'grid',
       theme: 'default',
       backgroundColor: '#ffffff',
       fontFamily: 'Microsoft JhengHei',
       autoApprove: true,
+      showUnmoderated: false,
+      autoApproveKeywords: '',
+      autoRejectKeywords: '',
       requirePassword: false,
-      password: ''
+      password: '',
+      textColor: '#333333',
+      autoplayDelay: 4,
+      imageExtraDelay: 1,
+      wallTitle: '',
+      wallSubtitle: '',
+      fontSize: 48
     }
   }
   
@@ -247,36 +239,6 @@ async function handleSubmit() {
 </script>
 
 <style scoped>
-.theme-option {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.theme-indicator {
-  width: 16px;
-  height: 16px;
-  border-radius: 4px;
-  border: 1px solid #ddd;
-}
-
-.theme-default {
-  background: linear-gradient(45deg, #f5f7fa, #c3cfe2);
-}
-
-.theme-polaroid {
-  background: linear-gradient(45deg, #fff, #f8f8f8);
-  border: 2px solid #333;
-}
-
-.theme-instagram {
-  background: linear-gradient(45deg, #833ab4, #fd1d1d, #fcb045);
-}
-
-.theme-magazine {
-  background: linear-gradient(45deg, #2c3e50, #34495e);
-}
-
 .form-help-text {
   font-size: 12px;
   color: #666;

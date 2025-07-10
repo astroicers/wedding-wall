@@ -65,15 +65,24 @@
         >
           <div class="wall-card-header">
             <div class="wall-theme-indicator" :class="`theme-${wall.settings.theme}`"></div>
-            <el-dropdown trigger="click" @command="handleWallAction">
-              <el-button text>
+            <el-dropdown @command="handleWallAction" trigger="click">
+              <el-button text @click.stop>
                 <el-icon><MoreFilled /></el-icon>
               </el-button>
               <template #dropdown>
                 <el-dropdown-menu>
-                  <el-dropdown-item :command="`edit-${wall.id}`">編輯設定</el-dropdown-item>
-                  <el-dropdown-item :command="`duplicate-${wall.id}`">複製祝福牆</el-dropdown-item>
-                  <el-dropdown-item :command="`delete-${wall.id}`" divided>刪除</el-dropdown-item>
+                  <el-dropdown-item :command="`edit-${wall.id}`">
+                    <el-icon><Edit /></el-icon>
+                    編輯設定
+                  </el-dropdown-item>
+                  <el-dropdown-item :command="`duplicate-${wall.id}`">
+                    <el-icon><CopyDocument /></el-icon>
+                    複製祝福牆
+                  </el-dropdown-item>
+                  <el-dropdown-item :command="`delete-${wall.id}`" divided>
+                    <el-icon><Delete /></el-icon>
+                    隱藏祝福牆
+                  </el-dropdown-item>
                 </el-dropdown-menu>
               </template>
             </el-dropdown>
@@ -123,11 +132,14 @@
 import { 
   Plus, 
   SwitchButton, 
-  MoreFilled, 
+  Delete, 
   Message, 
   Calendar, 
   ArrowRight,
-  User
+  User,
+  MoreFilled,
+  Edit,
+  CopyDocument
 } from '@element-plus/icons-vue'
 import type { Wall } from '~/types/wall'
 import CreateWallDialog from '~/components/CreateWallDialog.vue'
@@ -272,12 +284,12 @@ async function handleWallAction(command: string) {
   }
 }
 
-// 刪除祝福牆
+// 隱藏祝福牆（僅在UI上隱藏，不刪除MinIO數據）
 async function handleDeleteWall(wallId: string) {
   try {
     await ElMessageBox.confirm(
-      '確定要刪除這個祝福牆嗎？此操作無法撤銷。',
-      '確認刪除',
+      '確定要隱藏這個祝福牆嗎？此操作只會在界面上隱藏，不會刪除實際數據。',
+      '隱藏祝福牆',
       {
         confirmButtonText: '確定',
         cancelButtonText: '取消',
@@ -285,10 +297,12 @@ async function handleDeleteWall(wallId: string) {
       }
     )
     
-    await wallsStore.deleteWall(wallId)
+    // 只在UI上隱藏，不實際刪除MinIO數據
+    wallsStore.hideWallFromUI(wallId)
+    ElMessage.success('祝福牆已隱藏')
   } catch (error) {
     if (error !== 'cancel') {
-      console.error('Delete wall failed:', error)
+      console.error('Hide wall failed:', error)
     }
   }
 }

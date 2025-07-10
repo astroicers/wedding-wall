@@ -20,7 +20,7 @@
             <div class="wall-item">
               <div class="wall-info">
                 <span class="wall-name">{{ wall.name }}</span>
-                <span class="wall-mode">{{ getDisplayModeText(wall.settings.displayMode) }}</span>
+                <span class="wall-mode">{{ wall.isPublic ? '公開' : '私人' }}</span>
               </div>
               <el-tag 
                 :type="wall.isActive ? 'success' : 'info'" 
@@ -70,17 +70,6 @@ const currentWallName = computed(() => {
   return currentWall ? currentWall.name : '選擇祝福牆'
 })
 
-// 顯示模式文字映射
-const getDisplayModeText = (mode) => {
-  const modeMap = {
-    'grid': '網格',
-    'polaroid': '拍立得',
-    'magazine': '雜誌',
-    'stories': '故事',
-    'enhanced': '增強'
-  }
-  return modeMap[mode] || '網格'
-}
 
 // 處理牆切換
 const handleWallChange = (wallId) => {

@@ -41,12 +41,8 @@ export default defineEventHandler(async (event) => {
       })
     }
 
-    if (!body.displayMode || typeof body.displayMode !== 'string') {
-      throw createError({
-        statusCode: 400,
-        statusMessage: 'Display mode is required'
-      })
-    }
+    // DisplayMode is now optional since we removed it from the frontend
+    // We'll use the existing value from the wall metadata if not provided
 
     const bucket = 'wedding-wall'
     const metadataPath = `users/${userId}/walls/${wallId}/metadata.json`
@@ -68,10 +64,11 @@ export default defineEventHandler(async (event) => {
     const updatedMetadata = {
       ...currentMetadata,
       name: body.name.trim(),
+      description: body.description || currentMetadata.description || '',
       settings: {
         ...currentMetadata.settings,
         ...(body.settings || {}), // 合併所有設定
-        displayMode: body.displayMode || body.settings?.displayMode || currentMetadata.settings.displayMode
+        displayMode: body.displayMode || body.settings?.displayMode || currentMetadata.settings?.displayMode || 'grid'
       },
       isActive: typeof body.isActive === 'boolean' ? body.isActive : currentMetadata.isActive,
       updatedAt: Date.now()

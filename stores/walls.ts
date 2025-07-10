@@ -199,6 +199,27 @@ export const useWallsStore = defineStore('walls', {
       }
     },
 
+    // Hide a wall from UI only (doesn't delete from MinIO)
+    hideWallFromUI(wallId: string) {
+      try {
+        if (!this.isOwner(wallId)) {
+          throw new Error('Access denied')
+        }
+
+        // Remove from local state only - no API call
+        this.walls = this.walls.filter(w => w.id !== wallId)
+        
+        if (this.currentWall?.id === wallId) {
+          this.currentWall = null
+        }
+
+        console.log(`Wall ${wallId} hidden from UI (MinIO data preserved)`)
+      } catch (error: any) {
+        console.error('Failed to hide wall from UI:', error)
+        throw error
+      }
+    },
+
     // Update message count for a wall
     async updateWallMessageCount(wallId: string) {
       try {

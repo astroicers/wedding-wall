@@ -16,34 +16,65 @@
           </div>
           
           <div class="setting-group">
-            <label class="setting-label">自動播放間隔時間</label>
+            <label class="setting-label" for="autoplay-delay-select">自動播放間隔時間</label>
             <p class="setting-description">每則訊息的基本顯示時間</p>
             <div class="setting-control">
-              <el-slider 
+              <el-select 
+                id="autoplay-delay-select"
                 v-model="autoplayDelay" 
-                :min="2" 
-                :max="10" 
-                :step="1"
-                show-stops
                 @change="updateSettings"
-              />
-              <span class="setting-value">{{ autoplayDelay }} 秒</span>
+                class="setting-select"
+                placeholder="選擇時間"
+              >
+                <el-option
+                  v-for="option in autoplayDelayOptions"
+                  :key="option.value"
+                  :label="option.label"
+                  :value="option.value"
+                />
+              </el-select>
             </div>
           </div>
 
           <div class="setting-group">
-            <label class="setting-label">圖片額外時間</label>
+            <label class="setting-label" for="image-delay-select">圖片額外時間</label>
             <p class="setting-description">含有照片的訊息會自動增加顯示時間</p>
             <div class="setting-control">
-              <el-slider 
+              <el-select 
+                id="image-delay-select"
                 v-model="imageDelay" 
-                :min="0.5" 
-                :max="3" 
-                :step="0.5"
-                show-stops
                 @change="updateSettings"
-              />
-              <span class="setting-value">+{{ imageDelay }} 秒</span>
+                class="setting-select"
+                placeholder="選擇時間"
+              >
+                <el-option
+                  v-for="option in imageDelayOptions"
+                  :key="option.value"
+                  :label="option.label"
+                  :value="option.value"
+                />
+              </el-select>
+            </div>
+          </div>
+
+          <div class="setting-group">
+            <label class="setting-label" for="font-size-select">字體大小</label>
+            <p class="setting-description">調整祝福訊息的字體大小</p>
+            <div class="setting-control">
+              <el-select 
+                id="font-size-select"
+                v-model="fontSize" 
+                @change="updateSettings"
+                class="setting-select"
+                placeholder="選擇字體大小"
+              >
+                <el-option
+                  v-for="option in fontSizeOptions"
+                  :key="option.value"
+                  :label="option.label"
+                  :value="option.value"
+                />
+              </el-select>
             </div>
           </div>
 
@@ -65,6 +96,42 @@ import { Setting, RefreshRight } from '@element-plus/icons-vue'
 // 設定項目
 const autoplayDelay = ref(3)      // 基礎間隔時間（秒）
 const imageDelay = ref(1)         // 圖片額外時間（秒）
+const fontSize = ref(16)          // 字體大小（px）
+
+// 選項配置
+const autoplayDelayOptions = [
+  { label: '2秒', value: 2 },
+  { label: '3秒', value: 3 },
+  { label: '4秒', value: 4 },
+  { label: '5秒', value: 5 },
+  { label: '6秒', value: 6 },
+  { label: '7秒', value: 7 },
+  { label: '8秒', value: 8 },
+  { label: '9秒', value: 9 },
+  { label: '10秒', value: 10 }
+]
+
+const imageDelayOptions = [
+  { label: '0.5秒', value: 0.5 },
+  { label: '1秒', value: 1 },
+  { label: '1.5秒', value: 1.5 },
+  { label: '2秒', value: 2 },
+  { label: '2.5秒', value: 2.5 },
+  { label: '3秒', value: 3 }
+]
+
+const fontSizeOptions = [
+  { label: '12px', value: 12 },
+  { label: '14px', value: 14 },
+  { label: '16px', value: 16 },
+  { label: '18px', value: 18 },
+  { label: '20px', value: 20 },
+  { label: '22px', value: 22 },
+  { label: '24px', value: 24 },
+  { label: '26px', value: 26 },
+  { label: '28px', value: 28 },
+  { label: '30px', value: 30 }
+]
 
 // 從 localStorage 載入設定
 onMounted(() => {
@@ -78,6 +145,7 @@ const loadSettings = () => {
       const parsed = JSON.parse(settings)
       autoplayDelay.value = parsed.autoplayDelay || 3
       imageDelay.value = parsed.imageDelay || 1
+      fontSize.value = parsed.fontSize || 16
     }
   } catch (error) {
     console.error('載入設定失敗:', error)
@@ -87,7 +155,8 @@ const loadSettings = () => {
 const updateSettings = () => {
   const settings = {
     autoplayDelay: autoplayDelay.value,
-    imageDelay: imageDelay.value
+    imageDelay: imageDelay.value,
+    fontSize: fontSize.value
   }
   
   try {
@@ -102,6 +171,7 @@ const updateSettings = () => {
 const resetToDefault = () => {
   autoplayDelay.value = 3
   imageDelay.value = 1
+  fontSize.value = 16
   updateSettings()
   ElMessage.success('已重置為默認設定')
 }
@@ -109,7 +179,8 @@ const resetToDefault = () => {
 // 導出設定供其他組件使用
 defineExpose({
   autoplayDelay,
-  imageDelay
+  imageDelay,
+  fontSize
 })
 </script>
 
@@ -183,16 +254,8 @@ defineExpose({
   gap: 1rem;
 }
 
-.setting-control .el-slider {
-  flex: 1;
-}
-
-.setting-value {
-  min-width: 50px;
-  text-align: center;
-  font-weight: 500;
-  color: #409EFF;
-  font-size: 0.9rem;
+.setting-select {
+  width: 200px;
 }
 
 .setting-actions {
@@ -209,8 +272,8 @@ defineExpose({
     gap: 0.5rem;
   }
   
-  .setting-value {
-    text-align: left;
+  .setting-select {
+    width: 100%;
   }
 }
 </style>
