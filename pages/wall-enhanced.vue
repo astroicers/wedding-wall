@@ -52,6 +52,8 @@
         :keyboard="{ enabled: true }"
         :loop="true"
         :grab-cursor="true"
+        :allow-touch-move="true"
+        :simulate-touch="true"
         @swiper="onSwiper"
         @slide-change="onSlideChange"
         @autoplay-pause="onAutoplayPause"
@@ -127,6 +129,9 @@
       <p>快去上傳第一則祝福吧！</p>
       <el-button type="primary" @click="navigateTo('/')">前往上傳</el-button>
     </div>
+    
+    <!-- QR Code 上傳按鈕 -->
+    <QRCodeUpload />
   </div>
 </template>
 
@@ -134,6 +139,7 @@
 import { Swiper, SwiperSlide } from 'swiper/vue'
 import { Navigation, Pagination, Autoplay, EffectFade, EffectCube, EffectFlip, EffectCoverflow, Keyboard } from 'swiper/modules'
 import InstagramPost from '~/components/InstagramPost.vue'
+import QRCodeUpload from '~/components/QRCodeUpload.vue'
 import { useGoogleFonts } from '~/composables/useGoogleFonts'
 import { 
   ArrowLeft, 
@@ -238,6 +244,7 @@ const autoplayConfig = computed(() => ({
   delay: getDynamicDelay(messages.value[currentIndex.value]),
   disableOnInteraction: false,
   pauseOnMouseEnter: true,
+  reverseDirection: true,
 }))
 
 // 背景樣式緩存，避免頻繁重新計算導致閃動

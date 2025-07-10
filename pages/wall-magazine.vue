@@ -78,6 +78,9 @@
       <p>快去上傳第一則祝福吧！</p>
       <el-button type="primary" @click="navigateTo('/')">前往上傳</el-button>
     </div>
+    
+    <!-- QR Code 上傳按鈕 -->
+    <QRCodeUpload />
   </div>
 </template>
 
@@ -85,6 +88,7 @@
 import { Swiper, SwiperSlide } from 'swiper/vue'
 import { Navigation, Pagination, Autoplay, Keyboard } from 'swiper/modules'
 import MagazinePost from '~/components/MagazinePost.vue'
+import QRCodeUpload from '~/components/QRCodeUpload.vue'
 import { 
   ArrowLeft, 
   Document, 

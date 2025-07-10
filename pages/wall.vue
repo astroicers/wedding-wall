@@ -52,11 +52,15 @@
       <p>快去上傳第一則祝福吧！</p>
       <el-button type="primary" @click="navigateTo('/')">前往上傳</el-button>
     </div>
+    
+    <!-- QR Code 上傳按鈕 -->
+    <QRCodeUpload />
   </div>
 </template>
   
   <script setup lang="ts">
   import MessageCard from '~/components/MessageCard.vue'
+  import QRCodeUpload from '~/components/QRCodeUpload.vue'
   import { ArrowLeft, Picture } from '@element-plus/icons-vue'
   
   const current = ref(0)

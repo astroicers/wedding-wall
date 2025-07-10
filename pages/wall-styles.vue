@@ -89,11 +89,15 @@
         </div>
       </div>
     </div>
+    
+    <!-- QR Code 上傳按鈕 -->
+    <QRCodeUpload />
   </div>
 </template>
 
 <script setup lang="ts">
 import WallStyleSelector from '~/components/WallStyleSelector.vue'
+import QRCodeUpload from '~/components/QRCodeUpload.vue'
 import { 
   ArrowLeft, 
   FullScreen, 

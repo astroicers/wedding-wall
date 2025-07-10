@@ -24,75 +24,24 @@
       }">{{ titleSettings.wallSubtitle }}</p>
     </div>
     
-    <!-- 相簿風格祝福牆 -->
+    <!-- 水平輪播祝福牆 -->
     <div class="wall-grid" v-if="messages.length > 0">
-      <div class="album-container">
-        <!-- 位置4 - 小圖 -->
-        <div class="side-thumbnails position-4">
-          <transition name="fade-slide" mode="out-in">
-            <div v-if="position4Message" :key="`pos4-${currentIndex}`" class="thumbnail-wrapper">
-              <GridMessageCard 
-                :message="position4Message" 
-                size="small"
-                :is-active="false"
-              />
-            </div>
-          </transition>
-        </div>
-        
-        <!-- 位置2 - 中圖 -->
-        <div class="side-thumbnails position-2">
-          <transition name="fade-slide" mode="out-in">
-            <div v-if="position2Message" :key="`pos2-${currentIndex}`" class="thumbnail-wrapper">
-              <GridMessageCard 
-                :message="position2Message" 
-                size="medium"
-                :is-active="false"
-              />
-            </div>
-          </transition>
-        </div>
-        
-        <!-- 位置1 - 主圖（大） -->
-        <div class="main-photo">
-          <transition name="photo-transition" mode="out-in">
-            <div v-if="mainMessage" :key="`main-${currentIndex}`" class="main-wrapper">
-              <GridMessageCard 
-                :message="mainMessage" 
-                size="main"
-                :is-active="true"
-              />
-            </div>
-          </transition>
-        </div>
-        
-        <!-- 位置3 - 中圖 -->
-        <div class="side-thumbnails position-3">
-          <transition name="fade-slide" mode="out-in">
-            <div v-if="position3Message" :key="`pos3-${currentIndex}`" class="thumbnail-wrapper">
-              <GridMessageCard 
-                :message="position3Message" 
-                size="medium"
-                :is-active="false"
-              />
-            </div>
-          </transition>
-        </div>
-        
-        <!-- 位置5 - 小圖 -->
-        <div class="side-thumbnails position-5">
-          <transition name="fade-slide" mode="out-in">
-            <div v-if="position5Message" :key="`pos5-${currentIndex}`" class="thumbnail-wrapper">
-              <GridMessageCard 
-                :message="position5Message" 
-                size="small"
-                :is-active="false"
-              />
-            </div>
-          </transition>
-        </div>
+      <div class="carousel-container">
+        <transition-group name="carousel" tag="div" class="cards-wrapper">
+          <div 
+            v-for="(message, index) in displayedMessages.slice(0, 3)" 
+            :key="`card-${message.timestamp}-${index}`"
+            class="card-slot"
+            :class="`position-${index + 1}`"
+          >
+            <GridMessageCard 
+              :message="message" 
+              :size="getCardSize(index)"
+              :is-active="index === 1"
+            />
+          </div>
+        </transition-group>
       </div>
-      
     </div>
     
     <!-- 空狀態 -->
@@ -104,11 +53,15 @@
       <p>快去上傳第一則祝福吧！</p>
       <el-button type="primary" @click="navigateTo('/')">前往上傳</el-button>
     </div>
+    
+    <!-- QR Code 上傳按鈕 -->
+    <QRCodeUpload />
   </div>
 </template>
 
 <script setup lang="ts">
 import GridMessageCard from '~/components/GridMessageCard.vue'
+import QRCodeUpload from '~/components/QRCodeUpload.vue'
 import { ArrowLeft, Picture } from '@element-plus/icons-vue'
 import { useGoogleFonts } from '~/composables/useGoogleFonts'
 
@@ -162,43 +115,30 @@ const backgroundStyle = computed(() => {
   return cachedBackgroundStyle.value
 })
 
-// 計算當前顯示的訊息組合
-// 位置1 - 主圖（當前索引）
-const mainMessage = computed(() => {
-  return messages.value[currentIndex.value] || null
+// 計算當前顯示的三張卡片
+const displayedMessages = computed(() => {
+  if (messages.value.length === 0) return []
+  if (messages.value.length === 1) return [messages.value[0]]
+  if (messages.value.length === 2) return [...messages.value]
+  
+  // 確保只返回3張卡片
+  const result = []
+  for (let i = 0; i < 3; i++) {
+    const messageIndex = (currentIndex.value - 1 + i + messages.value.length) % messages.value.length
+    result.push(messages.value[messageIndex])
+  }
+  return result.slice(0, 3) // 確保最多只有3張
 })
 
-// 位置2 - 中圖（前一張）
-const position2Message = computed(() => {
-  if (messages.value.length <= 1) return null
-  
-  const prevIndex = (currentIndex.value - 1 + messages.value.length) % messages.value.length
-  return messages.value[prevIndex] || null
-})
-
-// 位置3 - 中圖（下一張）
-const position3Message = computed(() => {
-  if (messages.value.length <= 1) return null
-  
-  const nextIndex = (currentIndex.value + 1) % messages.value.length
-  return messages.value[nextIndex] || null
-})
-
-// 位置4 - 小圖（前兩張）
-const position4Message = computed(() => {
-  if (messages.value.length <= 2) return null
-  
-  const prevIndex = (currentIndex.value - 2 + messages.value.length) % messages.value.length
-  return messages.value[prevIndex] || null
-})
-
-// 位置5 - 小圖（下兩張）
-const position5Message = computed(() => {
-  if (messages.value.length <= 2) return null
-  
-  const nextIndex = (currentIndex.value + 2) % messages.value.length
-  return messages.value[nextIndex] || null
-})
+// 根據位置決定卡片大小
+const getCardSize = (index: number) => {
+  switch (index) {
+    case 0: return 'medium' // 左邊
+    case 1: return 'main'   // 中心（主圖）
+    case 2: return 'medium' // 右邊
+    default: return 'medium'
+  }
+}
 
 // 自動輪播
 let autoPlayTimer: NodeJS.Timeout | null = null
@@ -211,7 +151,7 @@ const startAutoPlay = () => {
       // 向左移動（索引增加）
       currentIndex.value = (currentIndex.value + 1) % messages.value.length
     }
-  }, 4000) // 每4秒切換
+  }, 2000) // 每2秒切換，實現不斷移動輪播
 }
 
 const stopAutoPlay = () => {
@@ -402,7 +342,7 @@ watch(() => messages.value.length, (newLength) => {
   text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.4);
 }
 
-/* 相簿容器 */
+/* 水平輪播容器 */
 .wall-grid {
   flex: 1;
   width: 100%;
@@ -410,96 +350,79 @@ watch(() => messages.value.length, (newLength) => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 2rem;
+  padding: 0;
   box-sizing: border-box;
   position: relative;
 }
 
-.album-container {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 600px;
-  position: relative;
-  overflow: visible;
+.carousel-container {
   width: 100vw;
-  margin: 0 auto;
+  height: 650px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
 }
 
-/* 側邊縮圖 */
-.side-thumbnails {
+.cards-wrapper {
   display: flex;
-  justify-content: center;
   align-items: center;
+  justify-content: center;
+  gap: 40px;
+  width: 100vw;
+  height: 100%;
+  position: relative;
+  padding: 0 50px;
+  box-sizing: border-box;
+  max-width: 100vw;
+  overflow: hidden;
+}
+
+.card-slot {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.8s cubic-bezier(0.4, 0.0, 0.2, 1);
   position: relative;
 }
 
-/* 位置2和3 - 中圖 */
-.side-thumbnails.position-2,
-.side-thumbnails.position-3 {
-  flex: 0 0 520px;
+/* 位置1 - 左邊 */
+.card-slot.position-1 {
+  width: 400px;
+  height: 500px;
   z-index: 2;
+  opacity: 0.7;
+  transform: scale(0.85);
 }
 
-.side-thumbnails.position-2 {
-  margin-right: -173px;
-}
-
-.side-thumbnails.position-3 {
-  margin-left: -173px;
-}
-
-/* 位置4和5 - 小圖 */
-.side-thumbnails.position-4,
-.side-thumbnails.position-5 {
-  flex: 0 0 390px;
-  z-index: 1;
-}
-
-.side-thumbnails.position-4 {
-  margin-right: -260px;
-}
-
-.side-thumbnails.position-5 {
-  margin-left: -260px;
-}
-
-.thumbnail-wrapper {
-  transition: all 0.3s ease;
-  position: relative;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 12px;
-  overflow: hidden;
-  opacity: 1 !important;
-}
-
-
-/* 主圖區域 */
-.main-photo {
-  flex: 0 0 650px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+/* 位置2 - 中心主圖 */
+.card-slot.position-2 {
+  width: 500px;
+  height: 600px;
   z-index: 3;
-  position: relative;
+  opacity: 1;
+  transform: scale(1);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
 }
 
-.main-wrapper {
-  transform: scale(1);
-  transition: all 0.4s ease;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 12px;
-  overflow: hidden;
-  opacity: 1 !important;
+/* 位置3 - 右邊 */
+.card-slot.position-3 {
+  width: 400px;
+  height: 500px;
+  z-index: 2;
+  opacity: 0.7;
+  transform: scale(0.85);
+}
+
+/* 隱藏第4張卡片以後的內容 */
+.card-slot.position-4,
+.card-slot.position-5,
+.card-slot:nth-child(n+4) {
+  display: none !important;
 }
 
 
@@ -529,70 +452,76 @@ watch(() => messages.value.length, (newLength) => {
   opacity: 0.8;
 }
 
-/* 動畫效果 - 由左至右移動 */
-.photo-transition-enter-active,
-.photo-transition-leave-active {
-  transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+/* 輪播動畫效果 */
+.carousel-enter-active {
+  transition: all 1s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
-.photo-transition-enter-from {
+.carousel-leave-active {
+  transition: all 1s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.carousel-enter-from {
   opacity: 0;
-  transform: translateX(100px);
+  transform: translateX(120px) scale(0.7);
 }
 
-.photo-transition-leave-to {
+.carousel-leave-to {
   opacity: 0;
-  transform: translateX(-100px);
+  transform: translateX(-120px) scale(0.7);
 }
 
-.fade-slide-enter-active,
-.fade-slide-leave-active {
-  transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-}
-
-.fade-slide-enter-from {
-  opacity: 0.8;
-  transform: translateX(100px);
-}
-
-.fade-slide-leave-to {
-  opacity: 0;
-  transform: translateX(-100px);
+.carousel-move {
+  transition: all 1s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
 /* 響應式設計 */
 @media (max-width: 1200px) {
-  .album-container {
-    gap: 2rem;
+  .carousel-container {
+    height: 550px;
   }
   
-  .side-thumbnails {
-    flex: 0 0 150px;
+  .cards-wrapper {
+    gap: 30px;
+    padding: 0 30px;
   }
   
-  .main-photo {
-    flex: 0 0 400px;
+  .card-slot.position-1,
+  .card-slot.position-3 {
+    width: 320px;
+    height: 420px;
+  }
+  
+  .card-slot.position-2 {
+    width: 400px;
+    height: 500px;
   }
 }
 
 @media (max-width: 768px) {
   .wall-grid-page {
-    padding: 1rem;
+    padding: 0;
   }
   
-  .album-container {
-    flex-direction: column;
-    gap: 1.5rem;
+  .carousel-container {
+    height: 400px;
   }
   
-  .side-thumbnails {
-    display: none;
+  .cards-wrapper {
+    gap: 20px;
+    padding: 0 20px;
   }
   
-  .main-photo {
-    flex: 1;
-    width: 100%;
-    max-width: 400px;
+  .card-slot.position-1,
+  .card-slot.position-3 {
+    width: 120px;
+    height: 280px;
+    opacity: 0.6;
+  }
+  
+  .card-slot.position-2 {
+    width: 280px;
+    height: 350px;
   }
   
   .wall-title {
@@ -604,11 +533,17 @@ watch(() => messages.value.length, (newLength) => {
   }
   
   .back-button-container {
-    position: relative;
-    top: auto;
-    left: auto;
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    opacity: 0;
+    transform: translateX(-10px);
+    transition: all 0.3s ease;
+  }
+  
+  .wall-grid-page:hover .back-button-container {
     opacity: 1;
-    margin-bottom: 1rem;
+    transform: translateX(0);
   }
 }
 

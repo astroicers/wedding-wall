@@ -69,7 +69,8 @@ const truncateText = (text: string) => {
   transition: all 0.3s ease;
   display: flex;
   flex-direction: column;
-  height: fit-content;
+  height: 100%;
+  min-height: 400px;
   position: relative;
   width: 100%;
 }
@@ -89,18 +90,24 @@ const truncateText = (text: string) => {
 .size-small {
   max-width: 390px;
   width: 390px;
+  min-height: 450px;
 }
 
 .size-small .photo-section {
   height: 312px;
+  flex-shrink: 0;
 }
 
 .size-small .content-section {
-  padding: 0.5rem 0.8rem;
+  padding: 0.8rem 1rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .size-small .sender-name {
-  font-size: 0.8rem;
+  font-size: 0.9rem;
   margin: 0;
   color: rgba(44, 62, 80, 0.8);
 }
@@ -109,18 +116,24 @@ const truncateText = (text: string) => {
 .size-medium {
   max-width: 520px;
   width: 520px;
+  min-height: 520px;
 }
 
 .size-medium .photo-section {
   height: 416px;
+  flex-shrink: 0;
 }
 
 .size-medium .content-section {
-  padding: 0.8rem 1rem;
+  padding: 1rem 1.2rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .size-medium .sender-name {
-  font-size: 1rem;
+  font-size: 1.1rem;
   margin: 0;
   color: rgba(44, 62, 80, 0.9);
 }
@@ -129,14 +142,20 @@ const truncateText = (text: string) => {
 .size-main {
   max-width: 650px;
   width: 650px;
+  min-height: 600px;
 }
 
 .size-main .photo-section {
-  height: 520px;
+  height: 400px;
+  flex-shrink: 0;
 }
 
 .size-main .content-section {
   padding: 2rem 2.5rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .size-main .sender-name {
@@ -186,6 +205,8 @@ const truncateText = (text: string) => {
   text-align: center;
   background: white;
   flex: 1;
+  min-height: 80px;
+  position: relative;
 }
 
 .content-section.no-photo {
