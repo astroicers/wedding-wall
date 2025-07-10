@@ -3,7 +3,7 @@
     <div class="login-container">
       <div class="login-card">
         <div class="login-header">
-          <h1>🎊 婚禮祝福牆</h1>
+          <h1>祝福墻</h1>
           <p>請輸入密碼進入</p>
         </div>
         

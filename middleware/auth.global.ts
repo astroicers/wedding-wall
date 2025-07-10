@@ -4,7 +4,13 @@ export default defineNuxtRouteMiddleware((to) => {
     return
   }
 
-  // Only check auth on client side
+  // Only require authentication for admin and gallery pages
+  if (!to.path.startsWith('/admin') && !to.path.startsWith('/gallery')) {
+    // All non-admin and non-gallery pages are public
+    return
+  }
+
+  // Check authentication for admin and gallery pages
   if (import.meta.client) {
     const authStore = useAuthStore()
     

@@ -92,6 +92,24 @@
             <el-icon><Setting /></el-icon>
             系統設定
           </el-button>
+          
+          <el-button 
+            type="primary" 
+            @click="exportMessagesCSV"
+            :loading="exportingCSV"
+          >
+            <el-icon><Document /></el-icon>
+            匯出核准留言 (CSV)
+          </el-button>
+          
+          <el-button 
+            type="primary" 
+            @click="exportImagesZIP"
+            :loading="exportingZIP"
+          >
+            <el-icon><Picture /></el-icon>
+            匯出核准圖片 (ZIP)
+          </el-button>
         </div>
       </el-card>
     </div>
@@ -506,7 +524,8 @@ import {
   Setting,
   Close,
   View,
-  Upload
+  Upload,
+  Document
 } from '@element-plus/icons-vue'
 
 // 介面定義
@@ -527,6 +546,8 @@ const showImagePreview = ref(false)
 const selectedMessage = ref<MessageData | null>(null)
 const previewImageUrl = ref('')
 const filterStatus = ref('all')
+const exportingCSV = ref(false)
+const exportingZIP = ref(false)
 
 // 背景上傳相關
 const selectedFile = ref<File | null>(null)
@@ -899,6 +920,36 @@ const { isGoogleFont, getFontFamilyWithFallback, loadFont, customFonts, loadCust
 const handleFontChange = (value: string) => {
   settings.value.fontFamily = value
   loadFont(value)
+}
+
+// 匯出核准留言 CSV
+const exportMessagesCSV = async () => {
+  exportingCSV.value = true
+  try {
+    // 直接觸發下載
+    window.location.href = '/api/export/messages-csv'
+    ElMessage.success('CSV 匯出已開始下載')
+  } catch (error) {
+    console.error('匯出 CSV 失敗:', error)
+    ElMessage.error('匯出 CSV 失敗，請重試')
+  } finally {
+    exportingCSV.value = false
+  }
+}
+
+// 匯出核准圖片 ZIP
+const exportImagesZIP = async () => {
+  exportingZIP.value = true
+  try {
+    // 直接觸發下載
+    window.location.href = '/api/export/images-zip'
+    ElMessage.success('ZIP 匯出已開始下載')
+  } catch (error) {
+    console.error('匯出 ZIP 失敗:', error)
+    ElMessage.error('匯出 ZIP 失敗，請重試')
+  } finally {
+    exportingZIP.value = false
+  }
 }
 
 // 頁面設定

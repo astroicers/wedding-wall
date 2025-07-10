@@ -4,7 +4,7 @@
     <div class="hero-section">
       <div class="hero-content">
         <div class="hero-title">
-          <h1 class="main-title">🎊 婚禮祝福牆</h1>
+          <h1 class="main-title">祝福墻</h1>
           <p class="subtitle">分享美好瞬間，留下永恆祝福</p>
         </div>
         <div class="hero-actions">
@@ -231,9 +231,9 @@ const handleNavigation = (path: string) => {
 
 // 設定頁面 meta
 useHead({
-  title: '婚禮祝福牆 - 留下美好回憶',
+  title: '祝福墻 - 留下美好回憶',
   meta: [
-    { name: 'description', content: '歡迎來到婚禮祝福牆，上傳照片和留言祝福，與新人分享這個特別的時刻！' }
+    { name: 'description', content: '歡迎來到祝福墻，上傳照片和留言祝福，分享這個特別的時刻！' }
   ]
 })
 
