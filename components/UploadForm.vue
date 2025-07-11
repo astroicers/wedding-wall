@@ -18,22 +18,44 @@
           :disabled="uploading"
         />
       </el-form-item>
-      <el-form-item label="上傳圖片">
-        <el-upload
-          class="upload-demo"
-          :on-change="onFileChange"
-          :on-remove="onFileRemove"
-          :auto-upload="false"
-          :accept="'image/*'"
-          :limit="1"
-        >
-          <el-button>選擇圖片</el-button>
-          <template #tip>
-            <div class="el-upload__tip">
-              支援 JPG/PNG/GIF/WebP 格式，檔案大小不超過 5MB
-            </div>
-          </template>
-        </el-upload>
+      <el-form-item label="上傳圖片（可選）">
+        <div class="upload-mode-selector">
+          <el-radio-group v-model="uploadMode" @change="onModeChange">
+            <el-radio label="image">圖片模式</el-radio>
+            <el-radio label="text">純文字模式</el-radio>
+          </el-radio-group>
+        </div>
+        
+        <div v-if="uploadMode === 'image'" class="image-upload-section">
+          <el-upload
+            class="upload-demo"
+            :on-change="onFileChange"
+            :on-remove="onFileRemove"
+            :auto-upload="false"
+            :accept="'image/*'"
+            :limit="1"
+          >
+            <el-button>選擇圖片</el-button>
+            <template #tip>
+              <div class="el-upload__tip">
+                支援 JPG/PNG/GIF/WebP 格式，檔案大小不超過 5MB
+              </div>
+            </template>
+          </el-upload>
+        </div>
+        
+        <div v-else class="text-mode-tip">
+          <el-alert
+            title="純文字模式"
+            type="info"
+            :closable="false"
+            show-icon
+          >
+            <template #default>
+              您選擇了純文字模式，祝福訊息將以文字形式展示，無需上傳圖片。
+            </template>
+          </el-alert>
+        </div>
         
         <div v-if="previewUrl" class="image-preview">
           <img :src="previewUrl" alt="預覽圖片" />
@@ -58,6 +80,7 @@
   const file = ref<File | null>(null)
   const uploading = ref(false)
   const previewUrl = ref('')
+  const uploadMode = ref('image') // 'image' 或 'text'
   const { uploadMessage } = useApi()
   const { isValidImageType, getImagePreviewUrl, formatFileSize } = useMinio()
   
@@ -92,14 +115,17 @@
     previewUrl.value = ''
   }
   
+  function onModeChange() {
+    // 當切換到純文字模式時，清除已選擇的圖片
+    if (uploadMode.value === 'text') {
+      file.value = null
+      previewUrl.value = ''
+    }
+  }
+  
   async function submit() {
     if (!name.value.trim()) {
       ElMessage.error('請輸入您的姓名')
-      return
-    }
-    
-    if (!file.value) {
-      ElMessage.error('請選擇圖片')
       return
     }
 
@@ -112,14 +138,26 @@
       ElMessage.error('祝福內容不能超過50字')
       return
     }
+    
+    // 圖片模式下必須選擇圖片
+    if (uploadMode.value === 'image' && !file.value) {
+      ElMessage.error('請選擇圖片')
+      return
+    }
 
     uploading.value = true
     
     try {
       const formData = new FormData()
-      formData.append('file', file.value)
+      
+      // 只有在圖片模式下才添加檔案
+      if (uploadMode.value === 'image' && file.value) {
+        formData.append('file', file.value)
+      }
+      
       formData.append('name', name.value.trim())
       formData.append('text', text.value)
+      formData.append('uploadMode', uploadMode.value) // 添加上傳模式標識
 
       await uploadMessage(formData)
       
@@ -130,6 +168,7 @@
       text.value = ''
       file.value = null
       previewUrl.value = ''
+      uploadMode.value = 'image'
       
       // 返回首頁
       await navigateTo('/')
@@ -143,6 +182,18 @@
   </script>
 
   <style scoped>
+  .upload-mode-selector {
+    margin-bottom: 1rem;
+  }
+  
+  .image-upload-section {
+    margin-top: 1rem;
+  }
+  
+  .text-mode-tip {
+    margin-top: 1rem;
+  }
+
   .image-preview {
     margin-top: 1rem;
     border: 1px solid #dcdfe6;

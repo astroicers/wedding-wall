@@ -12,11 +12,24 @@
       </div>
       
             
+      <!-- 純文字模式 - 文字顯示在圖片區域 -->
+      <div v-else class="text-only-display-area">
+        <div class="text-main-content">
+          <div class="text-icon">
+            <el-icon size="32" color="white">
+              <ChatRound />
+            </el-icon>
+          </div>
+          <p class="main-blessing-text">{{ message.text }}</p>
+          <div class="text-decoration-line"></div>
+        </div>
+      </div>
+      
       <!-- 沒有圖片時的漸變背景 -->
-      <div v-else class="post-gradient-bg"></div>
+      <div v-if="!message.photo" class="post-gradient-bg"></div>
       
       <!-- 沒有照片時的毛玻璃效果 -->
-      <div v-else class="post-overlay glass-effect-no-photo"></div>
+      <div v-if="!message.photo" class="post-overlay glass-effect-no-photo"></div>
       
             
       <!-- 有照片時的毛玻璃覆蓋層 -->
@@ -64,8 +77,8 @@
             </div>
           </div>
           
-          <!-- 右下角留言內容 -->
-          <div class="post-text">
+          <!-- 右下角留言內容（只在有圖片時顯示） -->
+          <div v-if="message.photo" class="post-text">
             <p>{{ message.text }}</p>
           </div>
         </div>
@@ -184,6 +197,54 @@ onMounted(() => {
   background-repeat: no-repeat;
   opacity: 1;
   z-index: 4;
+}
+
+/* 純文字顯示區域 - 取代照片區域 */
+.text-only-display-area {
+  position: absolute;
+  top: 15%;
+  left: 0;
+  width: 100%;
+  height: 60%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 3;
+}
+
+.text-main-content {
+  text-align: center;
+  color: white;
+  padding: 2rem;
+  max-width: 90%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.text-icon {
+  margin-bottom: 0.5rem;
+  opacity: 0.9;
+}
+
+.main-blessing-text {
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 1.4;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
+  margin: 0;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  max-width: 100%;
+}
+
+.text-decoration-line {
+  width: 80px;
+  height: 3px;
+  background: linear-gradient(45deg, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.5));
+  border-radius: 2px;
+  margin-top: 0.5rem;
 }
 
 

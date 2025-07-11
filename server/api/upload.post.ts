@@ -11,21 +11,14 @@ export default defineEventHandler(async (event) => {
     const { fields, files } = await new Promise<any>((resolve, reject) => {
       form.parse(event.node.req, (err, fields, files) => {
         if (err) return reject(err)
-        if (!files.file) return reject(new Error('沒有檔案被上傳'))
         resolve({ fields, files })
       })
     })
 
-    const file = files.file[0]
+    const file = files.file?.[0]
     const name = fields.name?.[0] || '匿名'
     const text = fields.text?.[0] || ''
-
-    if (!file.originalFilename) {
-      throw createError({
-        statusCode: 400,
-        statusMessage: '檔案名稱無效'
-      })
-    }
+    const uploadMode = fields.uploadMode?.[0] || 'image'
 
     // 檢查祝福內容長度
     if (!text.trim()) {
@@ -42,23 +35,46 @@ export default defineEventHandler(async (event) => {
       })
     }
 
-    // 檢查檔案類型
-    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif']
-    if (!allowedTypes.includes(file.mimetype)) {
+    let filename = null
+    let photoUrl = null
+
+    // 只有在圖片模式且有檔案時才處理圖片上傳
+    if (uploadMode === 'image' && file) {
+      if (!file.originalFilename) {
+        throw createError({
+          statusCode: 400,
+          statusMessage: '檔案名稱無效'
+        })
+      }
+
+      // 檢查檔案類型
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif']
+      if (!allowedTypes.includes(file.mimetype)) {
+        throw createError({
+          statusCode: 400,
+          statusMessage: '只允許上傳圖片檔案'
+        })
+      }
+
+      const fileBuffer = await readFile(file.filepath)
+      filename = `${Date.now()}-${file.originalFilename}`
+
+      // 確保 bucket 存在
+      await MinioService.ensureBucket('wedding-wall')
+
+      // 上傳圖片
+      await MinioService.uploadFile(filename, fileBuffer, file.mimetype)
+      photoUrl = `/api/image/${encodeURIComponent(filename)}`
+    } else if (uploadMode === 'image') {
+      // 圖片模式但沒有檔案
       throw createError({
         statusCode: 400,
-        statusMessage: '只允許上傳圖片檔案'
+        statusMessage: '圖片模式需要選擇圖片'
       })
+    } else {
+      // 純文字模式，確保 bucket 存在
+      await MinioService.ensureBucket('wedding-wall')
     }
-
-    const fileBuffer = await readFile(file.filepath)
-    const filename = `${Date.now()}-${file.originalFilename}`
-
-    // 確保 bucket 存在
-    await MinioService.ensureBucket('wedding-wall')
-
-    // 上傳圖片
-    await MinioService.uploadFile(filename, fileBuffer, file.mimetype)
 
     // 獲取管理員設定以決定審核狀態
     const approvalStatus = await determineApprovalStatus(text)
@@ -67,9 +83,10 @@ export default defineEventHandler(async (event) => {
     const metadata = {
       name,
       text,
-      photo: `/api/image/${encodeURIComponent(filename)}`,
+      photo: photoUrl, // 純文字模式時為 null
       timestamp: Date.now(),
-      approved: approvalStatus
+      approved: approvalStatus,
+      uploadMode // 記錄上傳模式
     }
 
     // 上傳 metadata
@@ -78,8 +95,8 @@ export default defineEventHandler(async (event) => {
 
     return {
       success: true,
-      url: metadata.photo,
-      message: '上傳成功'
+      url: photoUrl,
+      message: uploadMode === 'text' ? '純文字祝福上傳成功' : '上傳成功'
     }
   } catch (error: any) {
     console.error('上傳錯誤:', error)

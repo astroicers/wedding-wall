@@ -166,8 +166,8 @@
         <div class="step-item">
           <div class="step-number">1</div>
           <div class="step-content">
-            <h4>上傳照片</h4>
-            <p>選擇一張美好的照片</p>
+            <h4>選擇模式</h4>
+            <p>圖片模式或純文字模式</p>
           </div>
         </div>
         <div class="step-divider">

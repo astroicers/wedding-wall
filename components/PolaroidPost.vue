@@ -8,19 +8,30 @@
           :style="{ backgroundImage: `url(${message.photo})` }"
         ></div>
         
-        <div v-else class="photo-placeholder">
-          <el-icon size="48" color="#bdc3c7">
-            <Picture />
-          </el-icon>
-          <span>No Photo</span>
+        <div v-else class="text-only-photo-area">
+          <div class="text-blessing-content">
+            <div class="text-icon">
+              <el-icon size="32" color="#3498db">
+                <Picture />
+              </el-icon>
+            </div>
+            <p class="blessing-main-text">{{ message.text }}</p>
+            <div class="text-frame-decoration"></div>
+          </div>
         </div>
         
         <div class="photo-shine"></div>
       </div>
       
       <div class="polaroid-caption">
-        <div class="handwritten-text" :class="{ 'side-layout': isLongText }">
+        <div v-if="message.photo" class="handwritten-text" :class="{ 'side-layout': isLongText }">
           <div class="message-text">{{ message.text }}</div>
+          <div class="signature">{{ message.name }}</div>
+          <div class="date">{{ formatDate(new Date()) }}</div>
+        </div>
+        
+        <!-- 純文字模式下只顯示姓名和日期 -->
+        <div v-else class="text-only-caption">
           <div class="signature">{{ message.name }}</div>
           <div class="date">{{ formatDate(new Date()) }}</div>
         </div>
@@ -131,21 +142,76 @@ const formatDate = (date: Date) => {
   background-repeat: no-repeat;
 }
 
-.photo-placeholder {
+/* 純文字模式照片區域 */
+.text-only-photo-area {
   width: 100%;
   height: 100%;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  color: #bdc3c7;
-  background: linear-gradient(45deg, #f8f9fa, #e9ecef);
+  background: linear-gradient(135deg, #74b9ff, #0984e3);
+  color: white;
+  position: relative;
 }
 
-.photo-placeholder span {
-  font-size: 14px;
-  margin-top: 8px;
+.text-blessing-content {
+  text-align: center;
+  padding: 1.5rem;
+  max-width: 90%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.text-icon {
+  margin-bottom: 0.5rem;
+  opacity: 0.8;
+}
+
+.blessing-main-text {
   font-family: 'Courier New', monospace;
+  font-size: 1.1rem;
+  font-weight: 600;
+  line-height: 1.4;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  margin: 0;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  text-align: center;
+}
+
+.text-frame-decoration {
+  width: 60px;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.7);
+  margin-top: 0.5rem;
+}
+
+/* 純文字模式底部區域 */
+.text-only-caption {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  gap: 0.5rem;
+}
+
+.text-only-caption .signature {
+  font-family: 'Courier New', monospace;
+  font-size: 18px;
+  color: #3498db;
+  font-weight: bold;
+  margin-bottom: 0;
+}
+
+.text-only-caption .date {
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+  color: #7f8c8d;
+  margin: 0;
 }
 
 .photo-shine {
