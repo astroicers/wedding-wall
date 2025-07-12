@@ -93,7 +93,7 @@
                 color: titleColor, 
                 fontFamily: getFontFamilyWithFallback(fontFamily),
                 fontSize: fontSize + 'px'
-              }">{{ wallTitle || '婚禮祝福牆' }}</h2>
+              }">{{ wallTitle || '祝福牆' }}</h2>
               <p v-if="wallSubtitle" :style="{ 
                 color: titleColor, 
                 opacity: 0.8,
@@ -120,7 +120,7 @@ import { Edit, RefreshRight } from '@element-plus/icons-vue'
 import { useGoogleFonts } from '~/composables/useGoogleFonts'
 
 // 設定項目
-const wallTitle = ref('婚禮祝福牆')
+const wallTitle = ref('祝福牆')
 const wallSubtitle = ref('')
 const titleColor = ref('#2c3e50')
 const fontFamily = ref('system-ui, -apple-system, sans-serif')
@@ -142,7 +142,7 @@ const loadSettings = async () => {
     const settings = localStorage.getItem('wallTitleSettings')
     if (settings) {
       const parsed = JSON.parse(settings)
-      wallTitle.value = parsed.wallTitle || '婚禮祝福牆'
+      wallTitle.value = parsed.wallTitle || '祝福牆'
       wallSubtitle.value = parsed.wallSubtitle || ''
       titleColor.value = parsed.titleColor || '#2c3e50'
       fontFamily.value = parsed.fontFamily || 'system-ui, -apple-system, sans-serif'
@@ -185,7 +185,7 @@ const handleFontChange = async (value: string) => {
 }
 
 const resetToDefault = () => {
-  wallTitle.value = '婚禮祝福牆'
+  wallTitle.value = '祝福牆'
   wallSubtitle.value = ''
   titleColor.value = '#2c3e50'
   fontFamily.value = 'system-ui, -apple-system, sans-serif'

@@ -177,7 +177,7 @@ const handleKeydown = (event: KeyboardEvent) => {
 }
 
 useHead({
-  title: 'Stories 祝福牆 - 婚禮祝福牆',
+  title: 'Stories 祝福牆 - 祝福牆',
   meta: [
     { name: 'description', content: 'Stories 風格祝福牆，垂直全螢幕體驗' }
   ]

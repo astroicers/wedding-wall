@@ -72,7 +72,7 @@ function getDefaultSettings() {
     autoRejectKeywords: '',
     
     // 祝福牆設定
-    wallTitle: '婚禮祝福牆',
+    wallTitle: '祝福牆',
     wallSubtitle: '',
     titleColor: '#2c3e50',
     fontFamily: 'system-ui, -apple-system, sans-serif',

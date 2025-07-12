@@ -183,7 +183,7 @@ const currentEffect = ref('coverflow')
 
 // 標題設定
 const titleSettings = ref({
-  wallTitle: '婚禮祝福牆',
+  wallTitle: '祝福牆',
   wallSubtitle: '',
   titleColor: '#ffffff',
   fontFamily: 'system-ui, -apple-system, sans-serif',
@@ -346,7 +346,7 @@ const handleKeydown = (event: KeyboardEvent) => {
 
 // 設定頁面 meta
 useHead({
-  title: '增強祝福牆 - 婚禮祝福牆',
+  title: '增強祝福牆 - 祝福牆',
   meta: [
     { name: 'description', content: '增強版祝福牆，支援多種轉場效果和互動控制' }
   ]

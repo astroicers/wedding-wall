@@ -24,7 +24,7 @@ const auth = useAuth()
 
 // 設定頁面 meta
 useHead({
-  title: '上傳祝福 - 婚禮祝福牆',
+  title: '上傳祝福 - 祝福牆',
   meta: [
     { name: 'description', content: '上傳您的照片和祝福訊息，與新人分享這個特別的時刻！' }
   ]

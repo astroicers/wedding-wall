@@ -72,7 +72,7 @@ export default defineEventHandler(async (event) => {
 
     // 生成文件名
     const currentDate = new Date().toISOString().split('T')[0]
-    const fileName = `婚禮祝福留言_${currentDate}.csv`
+    const fileName = `祝福留言_${currentDate}.csv`
 
     // 設置響應頭
     setHeader(event, 'Content-Type', 'text/csv; charset=utf-8')

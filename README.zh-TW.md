@@ -1,4 +1,4 @@
-# 婚禮祝福牆 🎊
+# 祝福牆 🎊
 
 [![Nuxt 3](https://img.shields.io/badge/Nuxt-3.x-00DC82?style=flat-square&logo=nuxt.js)](https://nuxt.com)
 [![Vue 3](https://img.shields.io/badge/Vue-3.x-4FC08D?style=flat-square&logo=vue.js)](https://vuejs.org)
@@ -7,7 +7,7 @@
 [![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?style=flat-square&logo=docker)](https://www.docker.com)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](LICENSE)
 
-一個使用 Nuxt 3、Element Plus 與 MinIO 打造的現代化婚禮祝福牆相簿系統。專為婚禮打造的互動式數位體驗，讓賓客能即時分享照片與祝福。
+一個使用 Nuxt 3、Element Plus 與 MinIO 打造的現代化祝福牆相簿系統。現代化的互動式數位體驗，讓賓客能即時分享照片與祝福。
 
 [English](README.md) | [中文](README.zh-TW.md)
 
@@ -58,7 +58,7 @@ docker-compose up -d
 ```
 
 這將啟動：
-- 婚禮祝福牆應用程式：`http://localhost:3000`
+- 祝福牆應用程式：`http://localhost:3000`
 - MinIO 儲存服務：`http://localhost:9000`
 - MinIO 控制台：`http://localhost:9001` (admin/admin123)
 
@@ -85,7 +85,7 @@ npm run dev
 
 ## 🎯 使用說明
 
-### 給婚禮賓客
+### 給賓客
 
 1. 訪問上傳頁面
 2. 輸入您的姓名
@@ -93,9 +93,9 @@ npm run dev
 4. 寫下祝福話語
 5. 送出後即可在祝福牆看到！
 
-### 給婚禮主辦方
+### 給主辦方
 
-1. 婚禮前設定系統
+1. 活動前設定系統
 2. 分享 QR Code 給賓客
 3. 將祝福牆投影在大螢幕
 4. 活動後下載所有照片

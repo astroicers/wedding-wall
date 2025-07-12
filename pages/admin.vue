@@ -369,7 +369,7 @@
               color: settings.titleColor,
               fontFamily: getFontFamilyWithFallback(settings.fontFamily),
               fontSize: settings.fontSize + 'px'
-            }">{{ settings.wallTitle || '婚禮祝福牆' }}</h2>
+            }">{{ settings.wallTitle || '祝福牆' }}</h2>
             <p v-if="settings.wallSubtitle" :style="{ 
               color: settings.titleColor, 
               opacity: 0.8,
@@ -555,7 +555,7 @@ const previewUrl = ref('')
 
 // 設定項目
 const settings = ref({
-  wallTitle: '婚禮祝福牆',
+  wallTitle: '祝福牆',
   wallSubtitle: '',
   titleColor: '#2c3e50',
   fontFamily: 'system-ui, -apple-system, sans-serif',
@@ -778,7 +778,7 @@ const loadSettings = async () => {
       const titleSettings = localStorage.getItem('wallTitleSettings')
       if (titleSettings) {
         const parsed = JSON.parse(titleSettings)
-        settings.value.wallTitle = parsed.wallTitle || '婚禮祝福牆'
+        settings.value.wallTitle = parsed.wallTitle || '祝福牆'
         settings.value.wallSubtitle = parsed.wallSubtitle || ''
         settings.value.titleColor = parsed.titleColor || '#2c3e50'
         settings.value.fontFamily = parsed.fontFamily || 'system-ui, -apple-system, sans-serif'
@@ -954,7 +954,7 @@ const exportImagesZIP = async () => {
 
 // 頁面設定
 useHead({
-  title: '管理員控制台 - 婚禮祝福牆',
+  title: '管理員控制台 - 祝福牆',
   meta: [
     { name: 'description', content: '管理員控制台，管理祝福留言和系統設定' }
   ]

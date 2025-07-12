@@ -5,7 +5,7 @@
         <el-icon size="48" color="#409EFF">
           <Picture />
         </el-icon>
-        <h2>🖼️ 婚禮祝福相簿</h2>
+        <h2>🖼️ 祝福相簿</h2>
         <p>瀏覽所有美好回憶</p>
         <div class="stats" v-if="imageList.length > 0">
           <span>共 {{ imageList.length }} 張照片</span>
@@ -86,9 +86,9 @@
 
   // 設定頁面 meta
   useHead({
-    title: '婚禮相簿 - 婚禮祝福牆',
+    title: '相簿 - 祝福牆',
     meta: [
-      { name: 'description', content: '瀏覽婚禮祝福牆的所有照片，下載美好回憶！' }
+      { name: 'description', content: '瀏覽祝福牆的所有照片，下載美好回憶！' }
     ]
   })
   
@@ -137,7 +137,7 @@
       const url = window.URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = `婚禮祝福留言_${new Date().toISOString().split('T')[0]}.csv`
+      a.download = `祝福留言_${new Date().toISOString().split('T')[0]}.csv`
       document.body.appendChild(a)
       a.click()
       
@@ -180,7 +180,7 @@
       const url = window.URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = `婚禮祝福照片_${new Date().toISOString().split('T')[0]}.zip`
+      a.download = `祝福照片_${new Date().toISOString().split('T')[0]}.zip`
       document.body.appendChild(a)
       a.click()
       

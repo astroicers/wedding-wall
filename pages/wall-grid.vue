@@ -67,7 +67,7 @@ import { useGoogleFonts } from '~/composables/useGoogleFonts'
 
 const currentIndex = ref(0)
 const titleSettings = ref({
-  wallTitle: '婚禮祝福牆',
+  wallTitle: '祝福牆',
   wallSubtitle: '',
   titleColor: '#ffffff',
   fontFamily: 'system-ui, -apple-system, sans-serif',
@@ -87,7 +87,7 @@ const messages = computed(() => messagesStore.messages)
 
 // 設定頁面 meta
 useHead({
-  title: '網格祝福牆 - 婚禮祝福牆',
+  title: '網格祝福牆 - 祝福牆',
   meta: [
     { name: 'description', content: '5列網格式祝福牆，中間主體隨機輪播' }
   ]

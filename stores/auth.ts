@@ -50,7 +50,7 @@ export const useAuthStore = defineStore('auth', {
       this.isPasswordProtected = value
       if (value) {
         this.loginTime = Date.now()
-        // 設定 3 小時後過期（適合婚禮活動）
+        // 設定 3 小時後過期（適合活動）
         this.sessionExpiry = Date.now() + (3 * 60 * 60 * 1000)
       }
     },

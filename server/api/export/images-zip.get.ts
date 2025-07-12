@@ -152,7 +152,7 @@ export default defineEventHandler(async (event) => {
     }
 
     // 添加說明文件
-    const readmeContent = `婚禮祝福照片集
+    const readmeContent = `祝福照片集
 ===============
 
 匯出日期: ${new Date().toLocaleString('zh-TW')}
@@ -177,7 +177,7 @@ export default defineEventHandler(async (event) => {
 
     // 生成文件名
     const currentDate = new Date().toISOString().split('T')[0]
-    const fileName = `婚禮祝福照片_${currentDate}.zip`
+    const fileName = `祝福照片_${currentDate}.zip`
 
     // 設置響應頭
     setHeader(event, 'Content-Type', 'application/zip')

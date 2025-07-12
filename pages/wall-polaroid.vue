@@ -240,7 +240,7 @@ const handleKeydown = (event: KeyboardEvent) => {
 }
 
 useHead({
-  title: 'Polaroid 祝福牆 - 婚禮祝福牆',
+  title: 'Polaroid 祝福牆 - 祝福牆',
   meta: [
     { name: 'description', content: 'Polaroid 風格祝福牆，復古拍立得照片效果' }
   ]

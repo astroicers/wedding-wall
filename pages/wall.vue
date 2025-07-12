@@ -65,7 +65,7 @@
   
   const current = ref(0)
   const titleSettings = ref({
-    wallTitle: '婚禮祝福牆',
+    wallTitle: '祝福牆',
     wallSubtitle: '',
     titleColor: '#ffffff',
     fontFamily: 'system-ui, -apple-system, sans-serif',
@@ -82,9 +82,9 @@
 
   // 設定頁面 meta
   useHead({
-    title: '祝福牆 - 婚禮祝福牆',
+    title: '祝福牆',
     meta: [
-      { name: 'description', content: '即時輪播展示所有婚禮祝福訊息和照片' }
+      { name: 'description', content: '即時輪播展示所有祝福訊息和照片' }
     ]
   })
 

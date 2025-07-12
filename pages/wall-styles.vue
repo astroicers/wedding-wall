@@ -110,7 +110,7 @@ const uiStore = useUIStore()
 
 // 設定頁面 meta
 useHead({
-  title: '祝福牆風格館 - 婚禮祝福牆',
+  title: '祝福牆風格館 - 祝福牆',
   meta: [
     { name: 'description', content: '探索多種精美的祝福牆風格，包含 Instagram、Stories、Magazine、Polaroid、Timeline、Mosaic 等風格' }
   ]

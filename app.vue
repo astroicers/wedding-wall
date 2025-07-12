@@ -12,6 +12,6 @@ onMounted(() => {
   // 初始化 UI 設定
   uiStore.initializeUI()
   
-  console.log('婚禮祝福牆應用已啟動，使用 Pinia 狀態管理')
+  console.log('祝福牆應用已啟動，使用 Pinia 狀態管理')
 })
 </script>

@@ -193,7 +193,7 @@ const handleKeydown = (event: KeyboardEvent) => {
 }
 
 useHead({
-  title: 'Magazine 祝福牆 - 婚禮祝福牆',
+  title: 'Magazine 祝福牆 - 祝福牆',
   meta: [
     { name: 'description', content: 'Magazine 風格祝福牆，優雅的雜誌排版設計' }
   ]
